@@ -19,7 +19,7 @@ gsap.registerPlugin(ScrollTrigger);
 const App = () => {
   useEffect(() => {
     // Recalculate all ScrollTrigger positions after full layout is painted
-    const id = setTimeout(() => ScrollTrigger.refresh(), 100);
+    const id = setTimeout(() => ScrollTrigger.refresh(), 200);
     return () => clearTimeout(id);
   }, []);
 

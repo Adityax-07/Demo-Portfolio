@@ -6,6 +6,7 @@ const Final = () => {
   const videoRef = useRef(null);
 
   useGSAP(() => {
+    gsap.set('.final', { marginTop: '-100vh' });
     gsap.set('.final-content', { opacity: 0 });
 
     const tl = gsap.timeline({

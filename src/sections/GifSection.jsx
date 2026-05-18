@@ -14,7 +14,7 @@ const GifSection = () => {
     ScrollTrigger.create({
       trigger: '.gif-section',
       start: 'top top',
-      end: '+=350% top',
+      end: '+=280% top',
       scrub: 1,
       pin: true,
       onUpdate: (self) => {

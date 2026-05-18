@@ -1076,7 +1076,7 @@ main {
   border-radius: 16px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.55rem;
   background: rgba(139,92,246,0.04);
   border: 1px solid rgba(139,92,246,0.18);
   position: relative;
@@ -1114,7 +1114,7 @@ main {
 }
 .pcard-img-wrap {
   width: calc(100% + 3rem);
-  margin: -1.5rem -1.5rem 1rem -1.5rem;
+  margin: -1.5rem -1.5rem 0.9rem -1.5rem;
   border-radius: 14px 14px 0 0;
   overflow: hidden;
   aspect-ratio: 16 / 9;
@@ -1124,47 +1124,94 @@ main {
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.5s ease;
+  transition: transform 0.55s ease;
 }
 .work-card:hover .pcard-img {
-  transform: scale(1.04);
+  transform: scale(1.05);
+}
+.pcard-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 .pcard-label {
-  font-size: 0.6rem;
+  font-size: 0.54rem;
   text-transform: uppercase;
-  letter-spacing: 0.25em;
-  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.32em;
+  color: rgba(167,139,250,0.45);
   font-family: var(--font-round-bold);
 }
 .pcard-name {
-  color: white;
+  color: #fff;
   font-family: var(--font-round-bold);
-  font-size: 0.95rem;
-  line-height: 1.3;
+  font-size: 1.05rem;
+  line-height: 1.22;
+  letter-spacing: 0.01em;
 }
-.pcard-stack {
-  color: rgba(255,255,255,0.3);
-  font-size: 0.7rem;
-  line-height: 1.5;
+.pcard-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, rgba(139,92,246,0.38), transparent);
+  margin: 0.1rem 0 0.1rem;
+}
+.pcard-descs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.pcard-desc {
+  color: rgba(255,255,255,0.44);
+  font-size: 0.73rem;
+  line-height: 1.58;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 600;
 }
 .pcard-highlight {
-  color: #fff9cb;
-  font-size: 0.75rem;
+  color: rgba(255,249,203,0.8);
+  font-size: 0.63rem;
   font-family: var(--font-round-bold);
+  letter-spacing: 0.07em;
+  padding: 0.28rem 0.65rem;
+  background: rgba(255,249,203,0.05);
+  border: 1px solid rgba(255,249,203,0.14);
+  border-radius: 6px;
+  line-height: 1.5;
+  align-self: flex-start;
+}
+.pcard-stack-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+}
+.pcard-stack-tag {
+  font-size: 0.56rem;
+  font-family: var(--font-round-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(139,92,246,0.65);
+  background: rgba(139,92,246,0.07);
+  border: 1px solid rgba(139,92,246,0.2);
+  padding: 0.16rem 0.5rem;
+  border-radius: 999px;
 }
 .pcard-links {
   display: flex;
-  gap: 1rem;
-  margin-top: 0.25rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(139,92,246,0.14);
 }
 .pcard-link {
-  font-size: 0.7rem;
-  color: rgba(255,255,255,0.3);
+  font-size: 0.62rem;
+  font-family: var(--font-round-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(167,139,250,0.5);
   transition: color 0.3s;
+  text-decoration: none;
 }
-.pcard-link:hover { color: #fff9cb; }
+.pcard-link:hover { color: #c4b5fd; }
 
 /* ── Outro / Contact section ── */
 .outro-blob {
@@ -1314,4 +1361,15 @@ main {
 .animated-gradient-bg {
   background: linear-gradient(to bottom, #1e2a52 0%, #6e4b91 35%, rgba(17,17,23,0.9) 72%, black 100%);
 }
+
+/* ── Stack-scroll: card-over-card stacking ── */
+.hero-section      { z-index: 1; }
+.first-vd-wrapper  { position: relative; z-index: 2; border-radius: 20px 20px 0 0; overflow: hidden; }
+.jason             { z-index: 3; border-radius: 20px 20px 0 0; }
+.second-vd-wrapper { position: relative; z-index: 4; border-radius: 20px 20px 0 0; overflow: hidden; }
+.lucia-life        { z-index: 5; border-radius: 20px 20px 0 0; }
+.final             { z-index: 6; border-radius: 20px 20px 0 0; }
+.work-section      { z-index: 7; border-radius: 20px 20px 0 0; }
+.gif-section       { z-index: 8; border-radius: 20px 20px 0 0; }
+.final-message     { z-index: 9; border-radius: 20px 20px 0 0; }
 

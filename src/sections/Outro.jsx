@@ -51,6 +51,7 @@ const LINKS = [
 
 const Outro = () => {
   useGSAP(() => {
+    gsap.set('.final-message', { marginTop: '-100vh' });
     gsap.set('.outro-inner', { opacity: 0, y: 40 })
     gsap.to('.outro-inner', {
       opacity: 1, y: 0, duration: 1.2, ease: 'power2.out',
