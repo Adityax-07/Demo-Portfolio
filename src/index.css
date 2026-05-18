@@ -1370,6 +1370,6 @@ main {
 .lucia-life        { z-index: 5; border-radius: 20px 20px 0 0; }
 .final             { z-index: 6; border-radius: 20px 20px 0 0; }
 .work-section      { z-index: 7; border-radius: 20px 20px 0 0; }
-.gif-section       { z-index: 8; border-radius: 20px 20px 0 0; }
+.gif-section       { z-index: 8; border-radius: 20px 20px 0 0; pointer-events: none; }
 .final-message     { z-index: 9; border-radius: 20px 20px 0 0; }
 
