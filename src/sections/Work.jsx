@@ -94,13 +94,11 @@ const Work = () => {
 
       <div className="work-grid">
         {PROJECTS.map(({ label, name, desc, stack, highlight, github, demo, file, img }) => (
-          <a
+          <div
             key={name}
             className="work-card"
-            href={file || demo}
-            target="_blank"
-            rel="noreferrer"
-            style={{ textDecoration: 'none', cursor: 'pointer' }}
+            onClick={() => window.open(file || demo, '_blank')}
+            style={{ cursor: 'pointer' }}
           >
             {img && (
               <div className="pcard-img-wrap">
@@ -128,10 +126,26 @@ const Work = () => {
             </div>
 
             <div className="pcard-links">
-              <a href={github} onClick={e => e.stopPropagation()} target="_blank" rel="noreferrer" className="pcard-link">GitHub ↗</a>
-              <span className="pcard-link">{file ? 'View Project ↗' : 'Live Demo ↗'}</span>
+              <a
+                href={github}
+                onClick={e => e.stopPropagation()}
+                target="_blank"
+                rel="noreferrer"
+                className="pcard-link"
+              >
+                GitHub ↗
+              </a>
+              <a
+                href={file || demo}
+                onClick={e => e.stopPropagation()}
+                target="_blank"
+                rel="noreferrer"
+                className="pcard-link"
+              >
+                {file ? 'View Project ↗' : 'Live Demo ↗'}
+              </a>
             </div>
-          </a>
+          </div>
         ))}
       </div>
     </section>
