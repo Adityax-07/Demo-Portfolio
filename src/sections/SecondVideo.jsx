@@ -3,45 +3,48 @@ import { useGSAP } from "@gsap/react";
 import { useRef } from "react";
 
 const SecondVideo = () => {
-  const videoRef = useRef();
+  const videoRef = useRef(null);
 
   useGSAP(() => {
-    gsap.set('.lucia', { marginTop: '-60vh', opacity: 0 });
+    gsap.set('.second-vd-wrapper', { marginTop: '-100vh', opacity: 0 });
 
     const tl = gsap.timeline({
       scrollTrigger: {
-        trigger: '.lucia',
+        trigger: '.second-vd-wrapper',
         start: 'top top',
-        end: 'bottom top',
-        scrub: 2,
-        pin: true
+        end: '+=200% top',
+        scrub: 3,
+        pin: true,
       }
-    })
+    });
 
-    tl.to('.lucia', { opacity: 1, duration: 1, ease: 'power1.inOut' })
+    tl.to('.second-vd-wrapper', { opacity: 1, duration: 1, ease: 'power1.inOut' });
 
-    videoRef.current.onloadedmetadata = () => {
-      tl.to(videoRef.current, { currentTime: videoRef.current.duration, duration: 3, ease: 'power1.inOut' }, '<')
+    const video = videoRef.current;
+    const addVideoTween = () => {
+      tl.to(video, { currentTime: video.duration, duration: 3, ease: 'none' }, '<');
+    };
+    if (video.readyState >= 1) {
+      addVideoTween();
+    } else {
+      video.onloadedmetadata = addVideoTween;
     }
-  })
+  }, []);
 
   return (
-    <section className="lucia">
+    <section className="second-vd-wrapper">
       <div className="h-dvh">
-        <video 
+        <video
           ref={videoRef}
           muted
           playsInline
           preload="auto"
           src="/videos/output2.mp4"
-          className="size-full object-cover second-vd"
-          style={{ 
-            objectPosition: '15% 0%' 
-          }}
+          className="second-vd"
         />
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default SecondVideo
+export default SecondVideo;

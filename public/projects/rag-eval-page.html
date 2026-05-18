@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Eval Suite · 8 Strategies · 10 Judges</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#02020b;--s1:#08070f;--s2:#0e0c18;
+  --border:rgba(255,255,255,.07);--text:#e8dfc8;--muted:#6b5f42;
+  --amber:#fbbf24;--orange:#fb923c;--green:#34d399;--violet:#c084fc;--red:#f87171;--cyan:#22d3ee;
+  --mono:'JetBrains Mono',monospace;--sans:'Rajdhani',sans-serif;--display:'Cormorant Garamond',serif;--bebas:'Bebas Neue',sans-serif;--r:12px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;font-weight:500;line-height:1.6;overflow-x:hidden;padding-top:56px}
+
+#starCanvas{position:fixed;inset:0;z-index:0;pointer-events:none;display:block}
+.dot-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(251,191,36,.11) 1px,transparent 1px);background-size:28px 28px}
+.amber-wash{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 120% 60% at 50% 0%,rgba(251,191,36,.07) 0%,transparent 60%),radial-gradient(ellipse 80% 50% at 0% 100%,rgba(245,158,11,.06) 0%,transparent 55%),radial-gradient(ellipse 60% 40% at 100% 50%,rgba(251,146,60,.05) 0%,transparent 50%)}
+.vignette{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 40%,transparent 35%,rgba(2,2,11,.68) 72%,rgba(2,2,11,.94) 100%)}
+.orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;will-change:transform}
+.o1{width:1100px;height:1100px;top:-450px;left:-350px;background:radial-gradient(circle,rgba(251,191,36,.26) 0%,rgba(245,158,11,.12) 40%,transparent 70%);filter:blur(110px);animation:oA 28s ease-in-out infinite alternate}
+.o2{width:900px;height:900px;bottom:-380px;right:-300px;background:radial-gradient(circle,rgba(251,146,60,.22) 0%,rgba(234,88,12,.09) 40%,transparent 70%);filter:blur(115px);animation:oB 34s ease-in-out infinite alternate}
+.o3{width:700px;height:700px;top:30%;left:35%;background:radial-gradient(circle,rgba(251,191,36,.16) 0%,rgba(245,158,11,.07) 45%,transparent 70%);filter:blur(90px);animation:oC 30s ease-in-out infinite alternate}
+.o4{width:600px;height:600px;top:10%;right:10%;background:radial-gradient(circle,rgba(251,191,36,.10) 0%,rgba(34,211,238,.05) 60%,transparent 80%);filter:blur(100px);animation:oD 22s ease-in-out infinite alternate}
+.o5{width:500px;height:500px;bottom:15%;left:10%;background:radial-gradient(circle,rgba(245,158,11,.12) 0%,rgba(52,211,153,.04) 60%,transparent 80%);filter:blur(90px);animation:oE 26s ease-in-out infinite alternate}
+@keyframes oA{from{transform:translate(0,0) scale(1)}to{transform:translate(100px,120px) scale(1.15)}}
+@keyframes oB{from{transform:translate(0,0) scale(1)}to{transform:translate(-80px,-100px) scale(1.12)}}
+@keyframes oC{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.25)}}
+@keyframes oD{from{transform:translate(0,0) scale(1)}to{transform:translate(-60px,80px) scale(1.1)}}
+@keyframes oE{from{transform:translate(0,0) scale(1)}to{transform:translate(70px,-60px) scale(1.18)}}
+
+.page{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 28px 120px}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:300;background:rgba(3,3,14,.84);backdrop-filter:blur(24px)}
+.nbrand{display:flex;align-items:center;gap:10px}
+.nlogo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--amber),var(--orange));display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:#000;box-shadow:0 0 22px rgba(251,191,36,.40)}
+.nname{font-family:var(--bebas);font-size:20px;letter-spacing:.06em;color:#fff}
+.ntag{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em}
+.nlinks{display:flex;gap:6px}
+.nlink{font-size:13px;font-weight:500;padding:7px 14px;border-radius:7px;text-decoration:none;transition:all .18s}
+.ghost{color:var(--muted)}.ghost:hover{color:var(--text);background:var(--s1)}
+.nprimary{color:#000;background:linear-gradient(135deg,var(--amber),var(--orange))}.nprimary:hover{box-shadow:0 0 28px rgba(251,191,36,.50);transform:translateY(-1px)}
+
+.rv{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.rv.in{opacity:1;transform:none}
+.rl{opacity:0;transform:translateX(-40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.rl.in{opacity:1;transform:none}
+.rr{opacity:0;transform:translateX(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.rr.in{opacity:1;transform:none}
+.d1{transition-delay:.07s}.d2{transition-delay:.15s}.d3{transition-delay:.23s}.d4{transition-delay:.31s}
+
+.fl{animation:fl var(--fd,7s) ease-in-out infinite;animation-delay:var(--fdel,0s)}
+@keyframes fl{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(var(--fy,-10px)) rotate(var(--fr,.3deg))}}
+
+.hero{padding:90px 0 64px;text-align:center}
+.chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.24);border-radius:20px;padding:5px 16px;margin-bottom:28px}
+.chipdot{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:cdot 2s ease-in-out infinite}
+@keyframes cdot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(251,191,36,.5)}50%{opacity:.4;box-shadow:0 0 0 8px rgba(251,191,36,0)}}
+h1{font-family:var(--display);font-size:clamp(48px,8vw,98px);font-weight:700;font-style:italic;line-height:0.96;letter-spacing:-.01em;color:#fff;margin-bottom:18px}
+h1 em{font-style:normal;background:linear-gradient(135deg,var(--amber) 10%,var(--orange) 55%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% 200%;animation:gs 4s ease infinite}
+@keyframes gs{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.sub{font-family:var(--sans);font-size:clamp(15px,1.8vw,20px);font-weight:500;color:var(--muted);max-width:620px;margin:0 auto 36px;line-height:1.75}
+.btns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:60px}
+.btn{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;padding:12px 26px;border-radius:9px;text-decoration:none;transition:all .22s;border:1px solid transparent}
+.bp{background:linear-gradient(135deg,var(--amber),var(--orange));color:#000}.bp:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(251,191,36,.45)}
+.bo{background:rgba(255,255,255,.04);color:var(--text);border-color:var(--border)}.bo:hover{background:var(--s1);transform:translateY(-1px)}
+
+.hero-ss{margin:0 auto 56px;max-width:880px;border-radius:18px;overflow:hidden;border:1px solid rgba(251,191,36,.18);box-shadow:0 0 0 1px rgba(255,255,255,.04),0 40px 120px rgba(0,0,0,.7),0 0 80px rgba(251,191,36,.10);position:relative}
+.hero-ss::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 75%,rgba(2,2,11,.9) 100%);pointer-events:none;z-index:1}
+.hero-ss-img{width:100%;display:block;border-radius:18px}
+
+.term{background:#060609;border:1px solid rgba(251,191,36,.18);border-radius:16px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.03),0 0 60px rgba(251,191,36,.05);margin-bottom:90px}
+.tbar{background:#0a0a0f;border-bottom:1px solid rgba(251,191,36,.12);padding:12px 18px;display:flex;align-items:center;gap:10px}
+.tdots{display:flex;gap:6px}.tdots span{width:10px;height:10px;border-radius:50%}
+.tdots span:nth-child(1){background:#ff5f57}.tdots span:nth-child(2){background:#febc2e}.tdots span:nth-child(3){background:#28c840}
+.tpath{flex:1;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;letter-spacing:.04em}
+.tbody{padding:22px 26px;font-family:var(--mono);font-size:12px;line-height:1.9;overflow-x:auto}
+.tprompt{color:rgba(251,191,36,.8)}.tcmd{color:#e8dfc8}.tcmt{color:rgba(100,90,55,.7)}
+.tres-head{color:rgba(251,191,36,.5);margin-top:14px;margin-bottom:6px;font-size:10px;letter-spacing:.18em;text-transform:uppercase}
+.tsep{border:none;border-top:1px solid rgba(251,191,36,.1);margin:8px 0}
+.trow{display:flex;gap:0;align-items:center}
+.tsys{min-width:210px;color:#c8b89a;font-size:11px}
+.tscore-best{color:var(--amber);font-weight:700}
+.tscore-top{color:var(--green);font-weight:700}
+.tscore{color:#a08060}
+.tscore-bad{color:rgba(248,113,113,.7)}
+.tbadge{font-family:var(--mono);font-size:10px;color:var(--amber);margin-left:8px}
+.tcursor{border-right:2px solid var(--amber);animation:blink .7s step-end infinite;margin-left:1px;display:inline-block;width:1px;height:13px;vertical-align:text-bottom}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+/* ── TERMINAL TABLE GRID ── */
+.t-tbl{display:grid;grid-template-columns:168px repeat(5,68px) 1fr;font-family:var(--mono);font-size:12px;margin-top:16px}
+.t-th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(251,191,36,.4);padding:0 0 9px;border-bottom:1px solid rgba(251,191,36,.18)}
+.t-td{padding:6px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.035)}
+.t-sys{color:#c8b89a}
+.t-best{color:var(--amber);font-weight:700}
+.t-top{color:var(--green);font-weight:700}
+.t-norm{color:#9a8860}
+.t-hi{color:var(--green);font-weight:700}
+.t-bad{color:rgba(248,113,113,.65)}
+.t-span{grid-column:1/-1;border-bottom:1px solid rgba(255,255,255,.035);padding:0}
+.t-tag{display:inline-block;font-size:9px;color:var(--amber);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.22);border-radius:4px;padding:2px 8px;letter-spacing:.04em;white-space:nowrap}
+.t-tag-g{display:inline-block;font-size:9px;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.22);border-radius:4px;padding:2px 8px;letter-spacing:.04em;white-space:nowrap}
+
+.stats{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:90px}
+.scell{background:var(--s1);padding:22px 10px;text-align:center;border-right:1px solid var(--border);transition:background .2s,transform .2s;cursor:default}
+.scell:last-child{border-right:none}.scell:hover{background:var(--s2);transform:translateY(-3px)}
+.snum{font-family:var(--bebas);font-size:38px;letter-spacing:.04em;display:block;margin-bottom:4px}
+.am{color:var(--amber)}.or{color:var(--orange)}.g{color:var(--green)}.cy{color:var(--cyan)}.w{color:#fff}
+.slabel{font-size:11px;color:var(--muted)}
+
+section{margin-top:90px}
+.sec-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.sec-h{font-family:var(--bebas);font-size:clamp(32px,4.5vw,54px);letter-spacing:.04em;color:#fff;margin-bottom:10px;line-height:1}
+.sec-d{font-family:var(--sans);color:var(--muted);font-size:16px;font-weight:500;max-width:560px;line-height:1.7;margin-bottom:34px}
+
+/* ── STRATEGY CARDS — 4-col grid ── */
+.systems-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.scard{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:22px 18px;position:relative;overflow:hidden;transition:border-color .25s,transform .25s,box-shadow .25s;cursor:default}
+.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--sc),transparent)}
+.scard::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 0%,var(--scg),transparent);pointer-events:none}
+.scard.am{--sc:var(--amber);--scg:rgba(251,191,36,.05)}.scard.am:hover{border-color:rgba(251,191,36,.4);transform:translateY(-5px);box-shadow:0 20px 60px rgba(251,191,36,.10)}
+.scard.or{--sc:var(--orange);--scg:rgba(251,146,60,.05)}.scard.or:hover{border-color:rgba(251,146,60,.4);transform:translateY(-5px);box-shadow:0 20px 60px rgba(251,146,60,.10)}
+.scard.g{--sc:var(--green);--scg:rgba(52,211,153,.05)}.scard.g:hover{border-color:rgba(52,211,153,.4);transform:translateY(-5px);box-shadow:0 20px 60px rgba(52,211,153,.10)}
+.scard.cy{--sc:var(--cyan);--scg:rgba(34,211,238,.05)}.scard.cy:hover{border-color:rgba(34,211,238,.4);transform:translateY(-5px);box-shadow:0 20px 60px rgba(34,211,238,.10)}
+.scard.vi{--sc:var(--violet);--scg:rgba(192,132,252,.05)}.scard.vi:hover{border-color:rgba(192,132,252,.4);transform:translateY(-5px);box-shadow:0 20px 60px rgba(192,132,252,.10)}
+.sbadge{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border-radius:4px;margin-bottom:12px;display:inline-block;font-weight:700}
+.scard.am .sbadge{color:var(--amber);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.22)}
+.scard.or .sbadge{color:var(--orange);background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.22)}
+.scard.g  .sbadge{color:var(--green);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.22)}
+.scard.cy .sbadge{color:var(--cyan);background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.22)}
+.scard.vi .sbadge{color:var(--violet);background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.22)}
+.scard-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px}
+.scard-sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px}
+.scard-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+.scard-score{font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 10px;border-radius:5px;display:inline-block}
+.scard.am .scard-score{color:var(--amber);background:rgba(251,191,36,.08)}
+.scard.or .scard-score{color:var(--orange);background:rgba(251,146,60,.08)}
+.scard.g  .scard-score{color:var(--green);background:rgba(52,211,153,.08)}
+.scard.cy .scard-score{color:var(--cyan);background:rgba(34,211,238,.08)}
+.scard.vi .scard-score{color:var(--violet);background:rgba(192,132,252,.08)}
+
+/* ── TABLE ── */
+.tbl-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:box-shadow .3s;overflow-x:auto}
+.tbl-wrap:hover{box-shadow:0 16px 56px rgba(0,0,0,.45)}
+table{width:100%;border-collapse:collapse;min-width:680px}
+thead tr{background:var(--s2)}
+th{padding:12px 14px;text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border);font-weight:600}
+th.amh{color:var(--amber)}th.gh{color:var(--green)}th.mh{color:var(--muted)}th.cyh{color:var(--cyan)}
+td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .15s}
+tbody tr:hover td{background:rgba(255,255,255,.025)}
+.mlbl2{color:var(--muted)}
+.val{font-family:var(--mono);font-size:12px;color:var(--text)}
+.bval{font-family:var(--mono);font-size:12px;font-weight:700}
+.bval.am{color:var(--amber)}.bval.g{color:var(--green)}.bval.cy{color:var(--cyan)}
+.badval{font-family:var(--mono);font-size:12px;color:var(--red)}
+.dimval{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tag{display:inline-flex;font-size:9px;padding:1px 6px;border-radius:3px;margin-left:5px;font-weight:700;vertical-align:middle}
+.tag.g{color:var(--green);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.22)}
+.tag.am{color:var(--amber);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.22)}
+.sys-name{color:#e8dfc8;font-weight:600;font-size:13px}
+.perfect{color:var(--amber);font-family:var(--mono);font-size:12px;font-weight:700}
+
+/* ── CHARTS ── */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.ccard{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:22px;transition:border-color .25s,transform .25s,box-shadow .25s}
+.ccard:hover{border-color:rgba(255,255,255,.16);transform:translateY(-5px);box-shadow:0 24px 70px rgba(0,0,0,.45)}
+.chead{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.ctitle{font-size:13px;font-weight:600;color:var(--text)}
+.cleg{display:flex;gap:10px;flex-wrap:wrap}
+.cl{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.cld{width:8px;height:8px;border-radius:2px}
+
+/* ── FINDINGS ── */
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.fcard{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px;transition:border-color .25s,transform .25s,box-shadow .25s}
+.fcard:hover{border-color:rgba(255,255,255,.16);transform:translateY(-5px);box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.ficon{font-size:22px;margin-bottom:10px;display:block}
+.ftitle{font-size:13px;font-weight:700;color:#fff;margin-bottom:5px}
+.fbody{font-size:12px;color:var(--muted);line-height:1.65}
+.fbody code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px;color:var(--text)}
+
+/* ── PIPELINE ── */
+.pipe{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding-bottom:8px}
+.pstep{flex-shrink:0;width:130px;text-align:center;position:relative}
+.pstep:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:28px;color:rgba(251,191,36,.5);font-family:var(--mono);font-size:15px;z-index:1}
+.pbox{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:12px 8px;transition:border-color .22s,transform .22s}
+.pbox:hover{border-color:rgba(251,191,36,.35);transform:translateY(-4px)}
+.pico{font-size:18px;display:block;margin-bottom:5px}
+.pname{font-family:var(--bebas);font-size:13px;color:#fff;letter-spacing:.05em;margin-bottom:3px}
+.pdesc{font-size:10px;color:var(--muted);line-height:1.4}
+.pgap{width:28px;flex-shrink:0}
+
+/* ── METRICS ── */
+.metw{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:box-shadow .3s}
+.metw:hover{box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.metr{display:grid;grid-template-columns:40px 180px 1fr 80px;align-items:center;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s}
+.metr:last-child{border-bottom:none}.metr.mhead{background:var(--s2);border-bottom:1px solid var(--border)}
+.metr:not(.mhead):hover{background:rgba(255,255,255,.025)}
+.mc2{padding:12px 14px;font-size:13px}
+.mc2.mhead{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mico{text-align:center;font-size:16px}
+.mname{font-weight:600;color:#fff;font-size:13px}
+.mdesc{color:var(--muted);font-size:12px}
+.munit{font-family:var(--mono);font-size:11px;color:var(--amber);text-align:right}
+
+/* ── TECH ── */
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tcard{background:var(--s1);border:1px solid var(--border);border-radius:9px;padding:16px 18px;display:flex;align-items:flex-start;gap:14px;transition:border-color .22s,transform .22s,box-shadow .22s}
+.tcard:hover{border-color:rgba(255,255,255,.16);transform:translateY(-3px);box-shadow:0 10px 32px rgba(0,0,0,.4)}
+.ticon{font-size:24px;flex-shrink:0;margin-top:2px}
+.tlayer{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.tname{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px}
+.tdesc{font-size:11px;color:var(--muted)}
+
+/* ── SETUP ── */
+.setup{background:#080600;border:1px solid rgba(251,191,36,.18);border-radius:var(--r);overflow:hidden;transition:box-shadow .3s}
+.setup:hover{box-shadow:0 0 80px rgba(251,191,36,.08)}
+.sbar2{background:rgba(251,191,36,.06);border-bottom:1px solid rgba(251,191,36,.14);padding:10px 20px;display:flex;align-items:center;gap:10px}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:cdot 2s ease-in-out infinite}
+.sbartxt{font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:.1em;text-transform:uppercase;opacity:.8}
+.sbody{padding:24px;font-family:var(--mono);font-size:12px;line-height:2.1}
+.steplbl{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);opacity:.7;display:block;margin-top:20px;margin-bottom:4px}
+.steplbl:first-child{margin-top:0}
+.cmd{color:#e8dfc8}.cmt{color:#3a3010}
+
+/* ── ROADMAP ── */
+.rm{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:box-shadow .3s}
+.rm:hover{box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.ri{display:flex;align-items:flex-start;gap:16px;padding:14px 22px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s}
+.ri:last-child{border-bottom:none}.ri:hover{background:rgba(255,255,255,.02)}
+.rst{font-family:var(--mono);font-size:11px;min-width:60px;flex-shrink:0;padding-top:1px}
+.rst.done{color:var(--green)}.rst.soon{color:var(--muted)}
+.rt{font-size:13px;color:var(--text)}
+
+/* ── CTA ── */
+.cta{margin-top:90px;text-align:center;padding:60px 32px;background:var(--s1);border:1px solid var(--border);border-radius:18px;position:relative;overflow:hidden;transition:box-shadow .3s}
+.cta:hover{box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.cta::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--amber),var(--orange),transparent)}
+.cta::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(251,191,36,.05),transparent);pointer-events:none}
+.cta-title{font-family:var(--bebas);font-size:clamp(32px,4.5vw,58px);letter-spacing:.05em;color:#fff;margin-bottom:10px}
+.cta-sub{color:var(--muted);font-size:15px;margin-bottom:28px}
+.cta-btns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;position:relative;z-index:1}
+
+footer{margin-top:48px;padding:22px 0;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--muted)}
+footer a{color:var(--amber);text-decoration:none}footer a:hover{text-decoration:underline}
+
+@media(max-width:900px){.systems-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){
+  .systems-grid,.cgrid,.fgrid,.tgrid{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .metr{grid-template-columns:40px 1fr}.mdesc,.munit{display:none}
+  .pipe{flex-direction:column;align-items:center}.pstep:not(:last-child)::after{content:'↓';right:unset;left:50%;transform:translateX(-50%);top:unset;bottom:-18px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+<div class="dot-grid"></div>
+<div class="amber-wash"></div>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="orb o4"></div><div class="orb o5"></div>
+<div class="vignette"></div>
+
+<div class="page">
+
+<!-- NAV -->
+<nav>
+  <div class="nbrand">
+    <div class="nlogo">RE</div>
+    <div><div class="nname">RAG Eval Suite</div><div class="ntag">by Adityax-07</div></div>
+  </div>
+  <div class="nlinks">
+    <a class="nlink ghost" href="https://github.com/Adityax-07/RAG-Systems-eval-suite" target="_blank" rel="noopener">GitHub</a>
+    <a class="nlink nprimary" href="https://huggingface.co/spaces/Adityax-07/RAG-Systems-eval-suite" target="_blank" rel="noopener">▶ View Demo</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero rv">
+  <div class="chip"><span class="chipdot"></span>8 RAG Strategies · 10 LLM Judges · 4,000+ metric pairs</div>
+  <h1>Eight Strategies.<br><em>One Truth.</em></h1>
+  <p class="sub">Run every RAG variant — including Adaptive routing — against the same document and the same questions. Ten LLM-as-judge metrics score every answer automatically, revealing which retrieval strategy wins and why. Adaptive RAG achieves <strong style="color:var(--amber)">perfect faithfulness: 1.000</strong>.</p>
+  <div class="btns">
+    <a class="btn bp" href="https://github.com/Adityax-07/RAG-Systems-eval-suite" target="_blank" rel="noopener">View on GitHub</a>
+    <a class="btn bo" href="https://huggingface.co/spaces/Adityax-07/RAG-Systems-eval-suite" target="_blank" rel="noopener">Live Dashboard</a>
+  </div>
+  <!-- SCREENSHOT -->
+  <div class="hero-ss rv d1" style="transition-delay:.1s">
+    <img src="../images/Screenshot 2026-05-17 234052.png" alt="RAG Eval Suite Dashboard" class="hero-ss-img" />
+  </div>
+  <!-- TERMINAL MOCK -->
+  <div class="term rv d2 fl" style="--fd:8s;--fy:-12px;--fr:.15deg;--fdel:0s">
+    <div class="tbar">
+      <div class="tdots"><span></span><span></span><span></span></div>
+      <div class="tpath">python examples/compare_systems.py --limit 10</div>
+    </div>
+    <div class="tbody">
+      <div><span class="tprompt">$ </span><span class="tcmd">python examples/compare_systems.py</span><span class="tcursor"></span></div>
+      <div class="tcmt"># Building shared FAISS + BM25 index from data/knowledge_base.txt...</div>
+      <div class="tcmt"># Running 8 systems × 10 questions × 10 judges in parallel...</div>
+      <div class="t-tbl">
+        <div class="t-th">System</div>
+        <div class="t-th">Faithful</div>
+        <div class="t-th">Relevance</div>
+        <div class="t-th">Complete</div>
+        <div class="t-th">Hallucin ↓</div>
+        <div class="t-th">Score</div>
+        <div class="t-th"></div>
+
+        <div class="t-td t-sys">adaptive_rag</div>
+        <div class="t-td t-best">1.000</div>
+        <div class="t-td t-norm">0.80</div>
+        <div class="t-td t-norm">0.80</div>
+        <div class="t-td t-norm">0.33</div>
+        <div class="t-td t-norm">0.76</div>
+        <div class="t-td"><span class="t-tag">✨ Perfect Faithfulness</span></div>
+
+        <div class="t-td t-sys">advanced_rag</div>
+        <div class="t-td t-top">0.88</div>
+        <div class="t-td t-top">0.76</div>
+        <div class="t-td t-top">0.73</div>
+        <div class="t-td t-hi">0.18</div>
+        <div class="t-td t-top">0.77</div>
+        <div class="t-td"><span class="t-tag-g">best fixed</span></div>
+
+        <div class="t-td t-sys">reranking_rag</div>
+        <div class="t-td t-norm">0.82</div>
+        <div class="t-td t-norm">0.75</div>
+        <div class="t-td t-norm">0.72</div>
+        <div class="t-td t-norm">0.21</div>
+        <div class="t-td t-norm">0.75</div>
+        <div class="t-td"></div>
+
+        <div class="t-td t-sys">hyde_rag</div>
+        <div class="t-td t-norm">0.80</div>
+        <div class="t-td t-norm">0.72</div>
+        <div class="t-td t-norm">0.69</div>
+        <div class="t-td t-norm">0.43</div>
+        <div class="t-td t-norm">0.73</div>
+        <div class="t-td"></div>
+
+        <div class="t-td t-sys">query_rewriting</div>
+        <div class="t-td t-norm">0.79</div>
+        <div class="t-td t-norm">0.72</div>
+        <div class="t-td t-norm">0.68</div>
+        <div class="t-td t-norm">0.43</div>
+        <div class="t-td t-norm">0.72</div>
+        <div class="t-td"></div>
+
+        <div class="t-td t-sys">naive_rag</div>
+        <div class="t-td t-norm">0.77</div>
+        <div class="t-td t-norm">0.70</div>
+        <div class="t-td t-norm">0.68</div>
+        <div class="t-td t-norm">0.44</div>
+        <div class="t-td t-norm">0.74</div>
+        <div class="t-td"></div>
+
+        <div class="t-td t-sys">base_llm</div>
+        <div class="t-td t-norm">0.76</div>
+        <div class="t-td t-norm">0.78</div>
+        <div class="t-td t-norm">0.79</div>
+        <div class="t-td t-bad">0.78</div>
+        <div class="t-td t-norm">0.75</div>
+        <div class="t-td"></div>
+
+        <div class="t-td t-sys" style="border-bottom:none">hybrid_rag</div>
+        <div class="t-td t-norm" style="border-bottom:none">0.74</div>
+        <div class="t-td t-norm" style="border-bottom:none">0.68</div>
+        <div class="t-td t-norm" style="border-bottom:none">0.62</div>
+        <div class="t-td t-norm" style="border-bottom:none">0.39</div>
+        <div class="t-td t-norm" style="border-bottom:none">0.72</div>
+        <div class="t-td" style="border-bottom:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats rv">
+  <div class="scell"><span class="snum am" data-cnt="8">0</span><div class="slabel">RAG Strategies</div></div>
+  <div class="scell"><span class="snum w" data-cnt="10">0</span><div class="slabel">Judge Metrics</div></div>
+  <div class="scell"><span class="snum g">4K+</span><div class="slabel">Metric Pairs</div></div>
+  <div class="scell"><span class="snum am">1.000</span><div class="slabel">Faithfulness (Adaptive)</div></div>
+  <div class="scell"><span class="snum cy">4×↓</span><div class="slabel">Hallucination Drop</div></div>
+</div>
+
+<!-- STRATEGIES -->
+<section>
+  <div class="sec-lbl rv">Strategies Compared</div>
+  <div class="sec-h rv">8 retrieval architectures, same benchmark.</div>
+  <div class="sec-d rv">Each system retrieves differently — the same 50-question eval exposes exactly what breaks and why.</div>
+  <div class="systems-grid">
+    <div class="scard am rl d1 fl" style="--fd:8s;--fy:-9px;--fr:.3deg;--fdel:0s">
+      <div class="sbadge">S1 · Baseline</div>
+      <div class="scard-title">Base LLM</div>
+      <div class="scard-sub">No retrieval · parametric only</div>
+      <div class="scard-desc">Answers from training weights alone. The floor every other system must beat — surprisingly competitive on coherence.</div>
+      <div class="scard-score">Score 0.75</div>
+    </div>
+    <div class="scard or rv d2 fl" style="--fd:9s;--fy:-11px;--fr:-.25deg;--fdel:-1.5s">
+      <div class="sbadge">S2 · Naive</div>
+      <div class="scard-title">Naive RAG</div>
+      <div class="scard-sub">FAISS top-3 semantic search</div>
+      <div class="scard-desc">Classic RAG: embed the question, find nearest 3 chunks, answer from those. Good baseline; misses exact-term queries.</div>
+      <div class="scard-score">Score 0.74</div>
+    </div>
+    <div class="scard cy rr d3 fl" style="--fd:7.5s;--fy:-8px;--fr:.4deg;--fdel:-3s">
+      <div class="sbadge">S3 · Hybrid</div>
+      <div class="scard-title">Hybrid RAG</div>
+      <div class="scard-sub">BM25 + FAISS merged via RRF</div>
+      <div class="scard-desc">Keyword search meets semantic search. Catches acronyms and technical terms FAISS alone misses.</div>
+      <div class="scard-score">Score 0.72</div>
+    </div>
+    <div class="scard g rl d1 fl" style="--fd:9.5s;--fy:-10px;--fr:-.3deg;--fdel:-.5s">
+      <div class="sbadge">S4 · Reranking</div>
+      <div class="scard-title">Reranking RAG</div>
+      <div class="scard-sub">FAISS × 10 → cross-encoder top-3</div>
+      <div class="scard-desc">Fetch 10 candidates, cross-encoder re-scores each pair together. Better precision — LLM sees only the most relevant chunks.</div>
+      <div class="scard-score">Score 0.75</div>
+    </div>
+    <div class="scard vi rv d2 fl" style="--fd:8.5s;--fy:-7px;--fr:.2deg;--fdel:-2s">
+      <div class="sbadge">S5 · HyDE</div>
+      <div class="scard-title">HyDE RAG</div>
+      <div class="scard-sub">Hypothetical answer embedding</div>
+      <div class="scard-desc">Generate a fake answer first, embed that instead of the question. Bridges the query/document embedding gap.</div>
+      <div class="scard-score">Score 0.73</div>
+    </div>
+    <div class="scard cy rr d3 fl" style="--fd:10s;--fy:-12px;--fr:-.18deg;--fdel:-4s">
+      <div class="sbadge">S6 · Rewriting</div>
+      <div class="scard-title">Query Rewriting</div>
+      <div class="scard-sub">3 rewrites · FAISS × 3 → RRF</div>
+      <div class="scard-desc">Rewrite the question 3 ways, run FAISS for each, merge via RRF. Better recall for ambiguous queries.</div>
+      <div class="scard-score">Score 0.72</div>
+    </div>
+    <div class="scard g rl d1 fl" style="--fd:11s;--fy:-14px;--fr:.12deg;--fdel:-1s">
+      <div class="sbadge">S7 · Advanced</div>
+      <div class="scard-title">Advanced RAG</div>
+      <div class="scard-sub">Rewriting + Hybrid + Reranking</div>
+      <div class="scard-desc">All three improvements stacked: multi-query generation, BM25+FAISS hybrid, cross-encoder reranking. Best faithfulness among fixed pipelines.</div>
+      <div class="scard-score">Score 0.77 · Best Fixed</div>
+    </div>
+    <div class="scard am rr d2 fl" style="--fd:9s;--fy:-10px;--fr:-.2deg;--fdel:-2.5s">
+      <div class="sbadge">S8 · Adaptive ✨</div>
+      <div class="scard-title">Adaptive RAG</div>
+      <div class="scard-sub">Dynamic routing per query</div>
+      <div class="scard-desc">Routes each query to the right pipeline: Simple → Naive · Complex → Advanced · Ambiguous → Hybrid. Avoids noisy over-retrieval for easy questions.</div>
+      <div class="scard-score">Faithfulness 1.000 ✨</div>
+    </div>
+  </div>
+</section>
+
+<!-- PIPELINE -->
+<section>
+  <div class="sec-lbl rv">Architecture</div>
+  <div class="sec-h rv">Shared index, parallel evaluation.</div>
+  <div class="sec-d rv">Built once, shared across all 8 systems. Each question runs through every pipeline in the same pass.</div>
+  <div class="rv fl" style="--fd:10s;--fy:-7px;--fr:.1deg;--fdel:-2s">
+    <div class="pipe">
+      <div class="pstep"><div class="pbox"><span class="pico">📄</span><div class="pname">Document</div><div class="pdesc">PDF or TXT</div></div></div>
+      <div class="pgap"></div>
+      <div class="pstep"><div class="pbox"><span class="pico">✂️</span><div class="pname">Chunking</div><div class="pdesc">~500-char splits</div></div></div>
+      <div class="pgap"></div>
+      <div class="pstep"><div class="pbox"><span class="pico">🔢</span><div class="pname">Index Build</div><div class="pdesc">FAISS + BM25 once</div></div></div>
+      <div class="pgap"></div>
+      <div class="pstep"><div class="pbox"><span class="pico">❓</span><div class="pname">50 Questions</div><div class="pdesc">Curated QA pairs</div></div></div>
+      <div class="pgap"></div>
+      <div class="pstep"><div class="pbox"><span class="pico">⚡</span><div class="pname">8 Systems</div><div class="pdesc">Parallel LLM calls</div></div></div>
+      <div class="pgap"></div>
+      <div class="pstep"><div class="pbox"><span class="pico">🧑‍⚖️</span><div class="pname">10 Judges</div><div class="pdesc">LLM scores parallel</div></div></div>
+      <div class="pgap"></div>
+      <div class="pstep"><div class="pbox"><span class="pico">🗄️</span><div class="pname">SQLite Cache</div><div class="pdesc">Persistent results</div></div></div>
+      <div class="pgap"></div>
+      <div class="pstep"><div class="pbox"><span class="pico">📊</span><div class="pname">Dashboard</div><div class="pdesc">Streamlit UI</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- BENCHMARK TABLE -->
+<section>
+  <div class="sec-lbl rv">Full Results</div>
+  <div class="sec-h rv">8 Systems × 10 Metrics · automated scoring</div>
+  <div class="sec-d rv">No manual grading. Every answer scored by Llama-3.1-8B-Instant judges in parallel.</div>
+  <div class="tbl-wrap rv fl" style="--fd:10s;--fy:-7px;--fr:.1deg;--fdel:-1s">
+    <table>
+      <thead><tr>
+        <th class="mh">System</th>
+        <th class="amh">Faithfulness</th>
+        <th class="amh">Relevance</th>
+        <th class="amh">Completeness</th>
+        <th class="gh">Hallucination ↓</th>
+        <th class="cyh">Score</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="sys-name">Adaptive RAG</td><td><span class="perfect">1.000</span><span class="tag am">✨ perfect</span></td><td class="val">0.80</td><td class="val">0.80</td><td class="val">0.33</td><td class="val">0.76</td></tr>
+        <tr><td class="sys-name">Advanced RAG</td><td><span class="bval g">0.88</span><span class="tag g">best fixed</span></td><td class="val">0.76</td><td class="val">0.73</td><td><span class="bval g">0.18</span><span class="tag g">↓ min</span></td><td><span class="bval am">0.77</span><span class="tag am">top score</span></td></tr>
+        <tr><td class="sys-name">Reranking RAG</td><td class="val">0.82</td><td class="val">0.75</td><td class="val">0.72</td><td class="val">0.21</td><td class="val">0.75</td></tr>
+        <tr><td class="sys-name">HyDE RAG</td><td class="val">0.80</td><td class="val">0.72</td><td class="val">0.69</td><td class="val">0.43</td><td class="val">0.73</td></tr>
+        <tr><td class="sys-name">Query Rewriting</td><td class="val">0.79</td><td class="val">0.72</td><td class="val">0.68</td><td class="val">0.43</td><td class="val">0.72</td></tr>
+        <tr><td class="sys-name">Naive RAG</td><td class="val">0.77</td><td class="val">0.70</td><td class="val">0.68</td><td class="val">0.44</td><td class="val">0.74</td></tr>
+        <tr><td class="sys-name">Base LLM</td><td class="val">0.76</td><td class="val">0.78</td><td class="val">0.79</td><td class="badval">0.78</td><td class="val">0.75</td></tr>
+        <tr><td class="sys-name">Hybrid RAG</td><td class="val">0.74</td><td class="val">0.68</td><td class="val">0.62</td><td class="val">0.39</td><td class="val">0.72</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- CHARTS -->
+<section>
+  <div class="sec-lbl rv">Visualized</div>
+  <div class="sec-h rv">Metrics at a glance</div>
+  <div class="cgrid rv">
+    <div class="ccard fl" style="--fd:8s;--fy:-9px;--fr:.22deg;--fdel:0s">
+      <div class="chead"><div class="ctitle">Faithfulness by Strategy</div></div>
+      <div style="height:220px;position:relative"><canvas id="c1"></canvas></div>
+    </div>
+    <div class="ccard fl" style="--fd:9s;--fy:-11px;--fr:-.22deg;--fdel:-2s">
+      <div class="chead"><div class="ctitle">Hallucination Rate ↓</div></div>
+      <div style="height:220px;position:relative"><canvas id="c2"></canvas></div>
+    </div>
+    <div class="ccard fl" style="--fd:11s;--fy:-8px;--fr:.16deg;--fdel:-4s">
+      <div class="chead">
+        <div class="ctitle">Multi-Metric Radar</div>
+        <div class="cleg">
+          <div class="cl"><div class="cld" style="background:var(--amber)"></div>Adaptive</div>
+          <div class="cl"><div class="cld" style="background:var(--green)"></div>Advanced</div>
+          <div class="cl"><div class="cld" style="background:var(--red)"></div>Base LLM</div>
+        </div>
+      </div>
+      <div style="height:220px;position:relative"><canvas id="c3"></canvas></div>
+    </div>
+    <div class="ccard fl" style="--fd:7s;--fy:-10px;--fr:-.3deg;--fdel:-1s">
+      <div class="chead"><div class="ctitle">Overall Score (0–1)</div></div>
+      <div style="height:220px;position:relative"><canvas id="c4"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- FINDINGS -->
+<section>
+  <div class="sec-lbl rv">Key Insights</div>
+  <div class="sec-h rv">What the numbers reveal</div>
+  <div class="fgrid">
+    <div class="fcard rl d1 fl" style="--fd:8s;--fy:-7px;--fr:.25deg;--fdel:0s"><span class="ficon">✨</span><div class="ftitle">Perfect faithfulness</div><div class="fbody">Adaptive RAG hits <code>1.000</code> faithfulness by routing simple queries to Naive RAG — avoiding over-retrieval that introduces noisy context.</div></div>
+    <div class="fcard rv d2 fl" style="--fd:9s;--fy:-9px;--fr:-.22deg;--fdel:-1s"><span class="ficon">🧭</span><div class="ftitle">Routing > stacking</div><div class="fbody">Advanced RAG stacks everything and scores <code>0.77</code>. Adaptive RAG routes intelligently — hitting the same tier without burning compute on every query.</div></div>
+    <div class="fcard rr d3 fl" style="--fd:10s;--fy:-8px;--fr:.3deg;--fdel:-2s"><span class="ficon">📉</span><div class="ftitle">Hallucination floor</div><div class="fbody">Advanced RAG achieves <code>0.18</code> hallucination rate — 4× lower than base LLM's <code>0.78</code>. Grounded retrieval is the single biggest lever.</div></div>
+    <div class="fcard rl d1 fl" style="--fd:7s;--fy:-7px;--fr:-.14deg;--fdel:-3s"><span class="ficon">🎯</span><div class="ftitle">Reranking wins precision</div><div class="fbody">Cross-encoder reads question and chunk together — bi-encoders encode separately. <code>0.82</code> faithfulness vs Naive's <code>0.77</code>.</div></div>
+    <div class="fcard rv d2 fl" style="--fd:11s;--fy:-11px;--fr:.2deg;--fdel:-1.5s"><span class="ficon">🔀</span><div class="ftitle">Hybrid recall advantage</div><div class="fbody">BM25 catches exact terms FAISS misses. RRF merges both lists without trade-offs. Critical for technical acronyms and precise domain terms.</div></div>
+    <div class="fcard rr d3 fl" style="--fd:8.5s;--fy:-8px;--fr:-.3deg;--fdel:-4s"><span class="ficon">🪄</span><div class="ftitle">HyDE bridges the gap</div><div class="fbody">Question and answer embeddings live in different spaces. Generating a hypothetical answer first puts the query vector into answer-space.</div></div>
+  </div>
+</section>
+
+<!-- EVAL METRICS -->
+<section>
+  <div class="sec-lbl rv">Evaluation</div>
+  <div class="sec-h rv">10-dimensional LLM-as-judge scoring</div>
+  <div class="sec-d rv">Every answer scored automatically on a 0–1 scale. No human grading, ever.</div>
+  <div class="metw rv fl" style="--fd:9s;--fy:-6px;--fr:-.1deg;--fdel:-3s">
+    <div class="metr mhead"><div class="mc2 mhead"></div><div class="mc2 mhead">Metric</div><div class="mc2 mhead">What It Measures</div><div class="mc2 mhead munit">Scale</div></div>
+    <div class="metr"><div class="mc2 mico">📖</div><div class="mc2 mname">Faithfulness</div><div class="mc2 mdesc">Are all claims supported by the retrieved context?</div><div class="mc2 munit">0–1</div></div>
+    <div class="metr"><div class="mc2 mico">🎯</div><div class="mc2 mname">Relevance</div><div class="mc2 mdesc">Does the answer actually address the question?</div><div class="mc2 munit">0–1</div></div>
+    <div class="metr"><div class="mc2 mico">✅</div><div class="mc2 mname">Completeness</div><div class="mc2 mdesc">Does it cover all parts of the question?</div><div class="mc2 munit">0–1</div></div>
+    <div class="metr"><div class="mc2 mico">🚫</div><div class="mc2 mname">Hallucination Rate</div><div class="mc2 mdesc">Fraction of claims NOT found in context (lower is better)</div><div class="mc2 munit">0–1 ↓</div></div>
+    <div class="metr"><div class="mc2 mico">✂️</div><div class="mc2 mname">Conciseness</div><div class="mc2 mdesc">Is it appropriately brief, not padded with filler?</div><div class="mc2 munit">0–1</div></div>
+    <div class="metr"><div class="mc2 mico">🔗</div><div class="mc2 mname">Coherence</div><div class="mc2 mdesc">Is it logically structured and easy to follow?</div><div class="mc2 munit">0–1</div></div>
+    <div class="metr"><div class="mc2 mico">🔬</div><div class="mc2 mname">Context Precision</div><div class="mc2 mdesc">How precisely does retrieved context match what was actually needed?</div><div class="mc2 munit">0–1</div></div>
+    <div class="metr"><div class="mc2 mico">🛡️</div><div class="mc2 mname">Toxicity</div><div class="mc2 mdesc">Does the response contain any harmful content? (lower is better)</div><div class="mc2 munit">0–1 ↓</div></div>
+    <div class="metr"><div class="mc2 mico">⏱️</div><div class="mc2 mname">Latency</div><div class="mc2 mdesc">Normalised response time — higher = faster system</div><div class="mc2 munit">0–1 ↑</div></div>
+    <div class="metr"><div class="mc2 mico">💰</div><div class="mc2 mname">Cost</div><div class="mc2 mdesc">Estimated API cost per query — higher = cheaper</div><div class="mc2 munit">0–1 ↑</div></div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section>
+  <div class="sec-lbl rv">Tech Stack</div>
+  <div class="sec-h rv">What powers the benchmark</div>
+  <div class="tgrid rv">
+    <div class="tcard fl" style="--fd:8s;--fy:-6px;--fr:.22deg;--fdel:0s"><div class="ticon">🔍</div><div><div class="tlayer">Semantic Search</div><div class="tname">FAISS</div><div class="tdesc">CPU vector search · all-MiniLM-L6-v2 embeddings (~80 MB)</div></div></div>
+    <div class="tcard fl" style="--fd:9s;--fy:-8px;--fr:-.2deg;--fdel:-1s"><div class="ticon">🔑</div><div><div class="tlayer">Keyword Search</div><div class="tname">BM25 (rank_bm25)</div><div class="tdesc">Sparse retrieval for exact terms and acronyms</div></div></div>
+    <div class="tcard fl" style="--fd:7s;--fy:-7px;--fr:.3deg;--fdel:-2s"><div class="ticon">🧑‍⚖️</div><div><div class="tlayer">Reranking</div><div class="tname">cross-encoder/ms-marco-MiniLM</div><div class="tdesc">Cross-encoder reranker · ~67 MB · runs on CPU</div></div></div>
+    <div class="tcard fl" style="--fd:10s;--fy:-5px;--fr:-.12deg;--fdel:-3s"><div class="ticon">⚡</div><div><div class="tlayer">LLM</div><div class="tname">Groq · Llama 3.3 70B</div><div class="tdesc">Ultra-fast inference for all 8 RAG pipelines</div></div></div>
+    <div class="tcard fl" style="--fd:9s;--fy:-9px;--fr:.2deg;--fdel:-.5s"><div class="ticon">🔗</div><div><div class="tlayer">Orchestration</div><div class="tname">LangChain</div><div class="tdesc">Pipeline composition · document ingestion</div></div></div>
+    <div class="tcard fl" style="--fd:8s;--fy:-6px;--fr:-.3deg;--fdel:-2s"><div class="ticon">🖥️</div><div><div class="tlayer">Dashboard</div><div class="tname">Streamlit</div><div class="tdesc">Live results dashboard with per-system comparison tables</div></div></div>
+    <div class="tcard fl" style="--fd:11s;--fy:-8px;--fr:.12deg;--fdel:-4s"><div class="ticon">🗄️</div><div><div class="tlayer">Storage</div><div class="tname">SQLite + SQLAlchemy</div><div class="tdesc">Persistent result cache — no re-running old queries</div></div></div>
+    <div class="tcard fl" style="--fd:9s;--fy:-7px;--fr:-.22deg;--fdel:-1.5s"><div class="ticon">⚙️</div><div><div class="tlayer">Config</div><div class="tname">Pydantic Settings</div><div class="tdesc">Type-safe config via .env · model + concurrency flags</div></div></div>
+  </div>
+</section>
+
+<!-- SETUP -->
+<section>
+  <div class="sec-lbl rv">Get Started</div>
+  <div class="sec-h rv">Run the full benchmark in 3 steps</div>
+  <div class="setup rv fl" style="--fd:10s;--fy:-6px;--fr:.1deg;--fdel:-2s">
+    <div class="sbar2"><div class="sdot"></div><div class="sbartxt">bash · zsh · powershell</div></div>
+    <div class="sbody">
+      <span class="steplbl">01 — clone &amp; install</span>
+      <div class="cmd">git clone https://github.com/Adityax-07/RAG-Systems-eval-suite.git</div>
+      <div class="cmd">cd llm-eval-framework &amp;&amp; pip install -e ".[dev]"</div>
+      <span class="steplbl">02 — add Groq API key (free at console.groq.com)</span>
+      <div class="cmd">cp .env.example .env &amp;&amp; echo "GROQ_API_KEY=gsk_..." &gt;&gt; .env</div>
+      <span class="steplbl">03 — run the benchmark</span>
+      <div class="cmd">python examples/compare_systems.py</div>
+      <div class="cmt"># 8 systems × 10 questions × 10 judges — results saved to SQLite</div>
+      <div class="cmt"># optional: streamlit run dashboard/app.py</div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section>
+  <div class="sec-lbl rv">Roadmap</div>
+  <div class="sec-h rv">What's next</div>
+  <div class="rm rv fl" style="--fd:9s;--fy:-5px;--fr:.1deg;--fdel:-1s">
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">8-system benchmark runner with shared FAISS + BM25 index</div></div>
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">10 LLM-as-judge metrics scored in parallel (incl. Context Precision + Toxicity)</div></div>
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">Adaptive RAG routing: Simple → Naive · Complex → Advanced · Ambiguous → Hybrid</div></div>
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">SQLite result persistence with query-level caching</div></div>
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">Streamlit dashboard with per-system comparison tables</div></div>
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">50-question curated QA dataset on 10-chapter AI/ML knowledge base</div></div>
+    <div class="ri"><div class="rst soon">⏳ soon</div><div class="rt">HuggingFace Spaces interactive demo</div></div>
+    <div class="ri"><div class="rst soon">⏳ soon</div><div class="rt">Custom document upload via Streamlit UI</div></div>
+    <div class="ri"><div class="rst soon">⏳ soon</div><div class="rt">RAGAS-style context recall + answer correctness metrics</div></div>
+    <div class="ri"><div class="rst soon">⏳ soon</div><div class="rt">Cerebras inference backend alongside Groq</div></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta rv fl" style="--fd:12s;--fy:-8px;--fr:.08deg;--fdel:-2s">
+  <div class="cta-title">See which RAG strategy wins on your data.</div>
+  <div class="cta-sub">Plug in any document. Watch all eight systems compete. Perfect faithfulness is achievable.</div>
+  <div class="cta-btns">
+    <a class="btn bp" href="https://github.com/Adityax-07/RAG-Systems-eval-suite" target="_blank" rel="noopener">⭐ Star on GitHub</a>
+    <a class="btn bo" href="https://huggingface.co/spaces/Adityax-07/RAG-Systems-eval-suite" target="_blank" rel="noopener">Live Dashboard</a>
+  </div>
+</div>
+
+<footer>
+  <div>Built by <a href="https://github.com/Adityax-07" target="_blank">Adityax-07</a> · New Delhi · FAISS · BM25 · LangChain · Groq · Streamlit</div>
+  <div><a href="https://github.com/Adityax-07/RAG-Systems-eval-suite" target="_blank">GitHub →</a></div>
+</footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" crossorigin="anonymous"></script>
+<script>
+/* ── STAR CANVAS ── */
+(function(){
+  const cv = document.getElementById('starCanvas');
+  const ctx = cv.getContext('2d');
+  let W, H, stars = [], meteors = [];
+  function resize(){ W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
+  function mkStar(){
+    return { x:Math.random()*W, y:Math.random()*H, r:Math.random()*1.6+0.2, baseAlpha:Math.random()*0.65+0.1, speed:Math.random()*0.0003+0.00008, phase:Math.random()*Math.PI*2, color:['#ffffff','#fff5c8','#ffe4a0','#ffd27a','#fff0d0'][Math.floor(Math.random()*5)] };
+  }
+  function mkMeteor(){
+    const x=Math.random()*W*0.6,y=Math.random()*H*0.35,angle=Math.PI/4+(Math.random()-0.5)*0.4,speed=8+Math.random()*10;
+    return{x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,len:100+Math.random()*150,alpha:1,alive:true};
+  }
+  function init(){ stars=[]; for(let i=0;i<320;i++) stars.push(mkStar()); }
+  function drawFrame(t){
+    ctx.clearRect(0,0,W,H);
+    for(const s of stars){
+      const a=s.baseAlpha*(0.4+0.6*Math.sin(t*s.speed*1000+s.phase));
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=s.color; ctx.globalAlpha=a; ctx.fill();
+      if(s.r>1.2&&a>0.5){ ctx.globalAlpha=a*0.3; ctx.strokeStyle=s.color; ctx.lineWidth=0.5; ctx.beginPath(); ctx.moveTo(s.x-s.r*2.5,s.y); ctx.lineTo(s.x+s.r*2.5,s.y); ctx.moveTo(s.x,s.y-s.r*2.5); ctx.lineTo(s.x,s.y+s.r*2.5); ctx.stroke(); }
+    }
+    for(let i=meteors.length-1;i>=0;i--){
+      const m=meteors[i]; if(!m.alive){meteors.splice(i,1);continue;}
+      const tx=m.x-m.vx*(m.len/10),ty=m.y-m.vy*(m.len/10);
+      const gr=ctx.createLinearGradient(m.x,m.y,tx,ty);
+      gr.addColorStop(0,`rgba(255,220,100,${m.alpha})`); gr.addColorStop(0.3,`rgba(255,200,80,${m.alpha*0.5})`); gr.addColorStop(1,'rgba(255,200,80,0)');
+      ctx.beginPath(); ctx.moveTo(m.x,m.y); ctx.lineTo(tx,ty); ctx.strokeStyle=gr; ctx.lineWidth=1.8; ctx.globalAlpha=m.alpha; ctx.stroke();
+      ctx.beginPath(); ctx.arc(m.x,m.y,2,0,Math.PI*2); ctx.fillStyle=`rgba(255,220,100,${m.alpha})`; ctx.fill();
+      m.x+=m.vx; m.y+=m.vy; m.alpha-=0.020; if(m.alpha<=0||m.x>W||m.y>H) m.alive=false;
+    }
+    ctx.globalAlpha=1;
+  }
+  let lastMeteor=0;
+  function loop(t){ drawFrame(t); if(t-lastMeteor>2800+Math.random()*2400){meteors.push(mkMeteor());lastMeteor=t;} requestAnimationFrame(loop); }
+  resize(); init(); window.addEventListener('resize',()=>{resize();init();}); requestAnimationFrame(loop);
+})();
+
+/* ── SCROLL REVEAL ── */
+const io=new IntersectionObserver(e=>e.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:0.09});
+document.querySelectorAll('.rv,.rl,.rr').forEach(el=>io.observe(el));
+
+/* ── COUNTERS ── */
+const cio=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const el=e.target,target=+el.dataset.cnt; let start=null;
+    (function step(ts){if(!start)start=ts; const p=Math.min((ts-start)/1300,1),ease=1-Math.pow(1-p,3); el.textContent=Math.round(ease*target); if(p<1)requestAnimationFrame(step);})(performance.now());
+    cio.unobserve(el);
+  });
+},{threshold:0.5});
+document.querySelectorAll('[data-cnt]').forEach(c=>cio.observe(c));
+
+/* ── CHARTS ── */
+window.addEventListener('load',function(){
+  Chart.defaults.color='#6b5f42';
+  Chart.defaults.font.family="'JetBrains Mono',monospace";
+  Chart.defaults.font.size=10;
+  const L=['Adaptive','Advanced','Reranking','HyDE','Rewriting','Naive','Base LLM','Hybrid'];
+  const A={duration:1500,easing:'easeOutQuart'};
+  const clrs=['rgba(251,191,36,.90)','rgba(52,211,153,.80)','rgba(52,211,153,.60)','rgba(192,132,252,.65)','rgba(34,211,238,.60)','rgba(34,211,238,.45)','rgba(251,146,60,.60)','rgba(248,113,113,.55)'];
+
+  new Chart(document.getElementById('c1'),{
+    type:'bar',
+    data:{labels:L,datasets:[{data:[1.00,0.88,0.82,0.80,0.79,0.77,0.76,0.74],backgroundColor:clrs,borderColor:clrs.map(c=>c.replace(/[\d.]+\)$/,'1)')),borderWidth:1,borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:A,scales:{y:{max:1.05,ticks:{color:'#6b5f42'},grid:{color:'rgba(255,255,255,.04)'}},x:{ticks:{color:'#6b5f42',maxRotation:35},grid:{display:false}}},plugins:{legend:{display:false}}}
+  });
+
+  new Chart(document.getElementById('c2'),{
+    type:'bar',
+    data:{labels:L,datasets:[{data:[0.33,0.18,0.21,0.43,0.43,0.44,0.78,0.39],backgroundColor:['rgba(52,211,153,.75)','rgba(52,211,153,.55)','rgba(52,211,153,.40)','rgba(251,191,36,.55)','rgba(251,191,36,.50)','rgba(251,146,60,.65)','rgba(248,113,113,.75)','rgba(251,191,36,.60)'],borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:A,scales:{y:{max:0.9,ticks:{color:'#6b5f42'},grid:{color:'rgba(255,255,255,.04)'}},x:{ticks:{color:'#6b5f42',maxRotation:35},grid:{display:false}}},plugins:{legend:{display:false}}}
+  });
+
+  new Chart(document.getElementById('c3'),{
+    type:'radar',
+    data:{
+      labels:['Faithfulness','Relevance','Completeness','Anti-Halluc.','Score'],
+      datasets:[
+        {label:'Adaptive RAG',data:[100,80,80,67,76],backgroundColor:'rgba(251,191,36,.08)',borderColor:'rgba(251,191,36,.85)',borderWidth:1.5,pointBackgroundColor:'#fbbf24',pointRadius:3},
+        {label:'Advanced RAG',data:[88,76,73,82,77],backgroundColor:'rgba(52,211,153,.06)',borderColor:'rgba(52,211,153,.75)',borderWidth:1.5,pointBackgroundColor:'#34d399',pointRadius:3},
+        {label:'Base LLM',   data:[76,78,79,22,75],backgroundColor:'rgba(248,113,113,.05)',borderColor:'rgba(248,113,113,.55)',borderWidth:1.5,pointBackgroundColor:'#f87171',pointRadius:3}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:1800,easing:'easeOutQuart'},scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:'rgba(255,255,255,.07)'},pointLabels:{color:'#6b5f42',font:{size:9}}}},plugins:{legend:{display:false}}}
+  });
+
+  new Chart(document.getElementById('c4'),{
+    type:'bar',
+    data:{labels:L,datasets:[{data:[0.76,0.77,0.75,0.73,0.72,0.74,0.75,0.72],backgroundColor:clrs,borderColor:clrs.map(c=>c.replace(/[\d.]+\)$/,'1)')),borderWidth:1,borderRadius:5,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:A,scales:{x:{max:1,ticks:{color:'#6b5f42'},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#6b5f42'},grid:{display:false}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' Score: '+c.parsed.x}}}}
+  });
+});
+</script>
+</body>
+</html>

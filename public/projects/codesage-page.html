@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeSage · AI Architecture Benchmark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#02030d;--s1:#080a18;--s2:#0e1120;
+  --border:rgba(255,255,255,.07);--text:#dde4f0;--muted:#55637a;
+  --blue:#60a5fa;--green:#34d399;--violet:#c084fc;--amber:#fbbf24;--red:#f87171;
+  --mono:'JetBrains Mono',monospace;--sans:'Rajdhani',sans-serif;--display:'Cormorant Garamond',serif;--bebas:'Bebas Neue',sans-serif;--r:12px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;font-weight:500;line-height:1.6;overflow-x:hidden;padding-top:56px}
+
+/* ── STAR BG ── */
+#starCanvas{position:fixed;inset:0;z-index:0;pointer-events:none;display:block}
+
+/* ── DOT GRID ── */
+.dot-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(96,165,250,.11) 1px,transparent 1px);background-size:28px 28px}
+
+/* ── BLUE WASH ── */
+.blue-wash{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 120% 60% at 50% 0%,rgba(96,165,250,.08) 0%,transparent 60%),
+    radial-gradient(ellipse 75% 50% at 0% 100%,rgba(139,92,246,.07) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 45% at 100% 45%,rgba(192,132,252,.06) 0%,transparent 50%)}
+
+/* ── VIGNETTE ── */
+.vignette{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 40%,transparent 35%,rgba(2,3,13,.68) 72%,rgba(2,3,13,.94) 100%)}
+
+/* ── NEBULA ORBS ── */
+.orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;will-change:transform}
+.o1{width:1100px;height:1100px;top:-420px;left:-320px;background:radial-gradient(circle,rgba(96,165,250,.28) 0%,rgba(59,130,246,.12) 40%,transparent 70%);filter:blur(100px);animation:oA 26s ease-in-out infinite alternate}
+.o2{width:950px;height:950px;bottom:-370px;right:-290px;background:radial-gradient(circle,rgba(192,132,252,.26) 0%,rgba(139,92,246,.11) 40%,transparent 70%);filter:blur(110px);animation:oB 32s ease-in-out infinite alternate}
+.o3{width:720px;height:720px;top:30%;left:35%;background:radial-gradient(circle,rgba(96,165,250,.16) 0%,rgba(192,132,252,.08) 45%,transparent 70%);filter:blur(90px);animation:oC 28s ease-in-out infinite alternate}
+.o4{width:620px;height:620px;top:10%;right:10%;background:radial-gradient(circle,rgba(99,102,241,.18) 0%,rgba(96,165,250,.06) 55%,transparent 75%);filter:blur(100px);animation:oD 20s ease-in-out infinite alternate}
+.o5{width:520px;height:520px;bottom:15%;left:10%;background:radial-gradient(circle,rgba(14,165,233,.16) 0%,rgba(96,165,250,.06) 55%,transparent 75%);filter:blur(90px);animation:oE 24s ease-in-out infinite alternate}
+@keyframes oA{from{transform:translate(0,0) scale(1)}to{transform:translate(100px,120px) scale(1.15)}}
+@keyframes oB{from{transform:translate(0,0) scale(1)}to{transform:translate(-80px,-100px) scale(1.12)}}
+@keyframes oC{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.25)}}
+@keyframes oD{from{transform:translate(0,0) scale(1)}to{transform:translate(-60px,80px) scale(1.1)}}
+@keyframes oE{from{transform:translate(0,0) scale(1)}to{transform:translate(70px,-60px) scale(1.18)}}
+
+/* ── PAGE ── */
+.page{position:relative;z-index:1;max-width:1020px;margin:0 auto;padding:0 28px 120px}
+
+/* ── NAV ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:300;background:rgba(4,5,14,.82);backdrop-filter:blur(24px)}
+.nbrand{display:flex;align-items:center;gap:10px}
+.nlogo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--violet));display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;font-weight:700;color:#fff;box-shadow:0 0 22px rgba(96,165,250,.35)}
+.nname{font-family:var(--bebas);font-size:20px;letter-spacing:.06em;color:#fff}
+.ntag{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em}
+.nlinks{display:flex;gap:6px}
+.nlink{font-size:13px;font-weight:500;padding:7px 14px;border-radius:7px;text-decoration:none;transition:all .18s}
+.ghost{color:var(--muted)}.ghost:hover{color:var(--text);background:var(--s1)}
+.nprimary{color:#fff;background:linear-gradient(135deg,var(--blue),#3b82f6)}.nprimary:hover{box-shadow:0 0 28px rgba(96,165,250,.45);transform:translateY(-1px)}
+
+/* ── REVEAL ANIMATIONS ── */
+.rv{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.rv.in{opacity:1;transform:none}
+.rl{opacity:0;transform:translateX(-40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.rl.in{opacity:1;transform:none}
+.rr{opacity:0;transform:translateX(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.rr.in{opacity:1;transform:none}
+.d1{transition-delay:.07s}.d2{transition-delay:.15s}.d3{transition-delay:.23s}.d4{transition-delay:.31s}
+
+/* ── FLOAT ── */
+.fl{animation:fl var(--fd,7s) ease-in-out infinite;animation-delay:var(--fdel,0s)}
+@keyframes fl{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(var(--fy,-10px)) rotate(var(--fr,.3deg))}}
+
+/* ── HERO ── */
+.hero{padding:90px 0 64px;text-align:center}
+.chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--green);background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.22);border-radius:20px;padding:5px 16px;margin-bottom:28px}
+.chipdot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:cdot 2s ease-in-out infinite}
+@keyframes cdot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(52,211,153,.5)}50%{opacity:.4;box-shadow:0 0 0 8px rgba(52,211,153,0)}}
+h1{font-family:var(--display);font-size:clamp(52px,9vw,105px);font-weight:700;font-style:italic;line-height:0.96;letter-spacing:-.01em;color:#fff;margin-bottom:18px}
+h1 em{font-style:normal;background:linear-gradient(135deg,var(--blue) 10%,var(--violet) 55%,var(--green) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% 200%;animation:gs 4s ease infinite}
+@keyframes gs{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.sub{font-family:var(--sans);font-size:clamp(15px,1.8vw,20px);font-weight:500;color:var(--muted);max-width:580px;margin:0 auto 36px;line-height:1.75}
+.btns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:60px}
+.btn{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;padding:12px 26px;border-radius:9px;text-decoration:none;transition:all .22s;border:1px solid transparent}
+.bp{background:linear-gradient(135deg,var(--blue),#3b82f6);color:#fff}.bp:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(96,165,250,.45)}
+.bo{background:rgba(255,255,255,.04);color:var(--text);border-color:var(--border)}.bo:hover{background:var(--s1);transform:translateY(-1px)}
+
+/* ── HERO SCREENSHOT ── */
+.hero-ss{margin:0 auto 56px;max-width:860px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(255,255,255,.04),0 40px 120px rgba(0,0,0,.7),0 0 80px rgba(96,165,250,.08);position:relative}
+.hero-ss::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 75%,rgba(4,5,14,.9) 100%);pointer-events:none;z-index:1}
+.hero-ss-img{width:100%;display:block;border-radius:18px}
+
+/* ── MOCK ── */
+.mock{background:var(--s1);border:1px solid rgba(255,255,255,.10);border-radius:16px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04);margin-bottom:90px}
+.mbar{background:var(--s2);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;gap:10px}
+.mdots{display:flex;gap:6px}.mdots span{width:10px;height:10px;border-radius:50%}
+.mdots span:nth-child(1){background:#ff5f57}.mdots span:nth-child(2){background:#febc2e}.mdots span:nth-child(3){background:#28c840}
+.murl{flex:1;background:var(--bg);border-radius:5px;padding:5px 12px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center}
+.mbody{padding:20px}
+.mq{background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:12px 16px;font-family:var(--mono);font-size:12px;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:10px;min-height:44px}
+.mq::before{content:'❯';color:var(--blue);flex-shrink:0}
+.mcols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.mc{border-radius:9px;padding:14px;border:1px solid}
+.mc.b{border-color:rgba(96,165,250,.22);background:rgba(96,165,250,.04)}
+.mc.g{border-color:rgba(52,211,153,.22);background:rgba(52,211,153,.04)}
+.mc.v{border-color:rgba(192,132,252,.22);background:rgba(192,132,252,.04)}
+.mlbl{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin-bottom:7px}
+.mc.b .mlbl{color:var(--blue)}.mc.g .mlbl{color:var(--green)}.mc.v .mlbl{color:var(--violet)}
+.mtxt{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.srow{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.slbl{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.sbar{width:54%;height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
+.sbf{height:100%;border-radius:2px;width:0%;transition:width 1.6s cubic-bezier(.16,1,.3,1)}
+.sval{font-family:var(--mono);font-size:9px}
+.mc.b .sval{color:var(--blue)}.mc.g .sval{color:var(--green)}.mc.v .sval{color:var(--violet)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.cursor{border-right:2px solid var(--blue);animation:blink .7s step-end infinite;margin-left:1px}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:90px}
+.scell{background:var(--s1);padding:22px 10px;text-align:center;border-right:1px solid var(--border);transition:background .2s,transform .2s;cursor:default}
+.scell:last-child{border-right:none}.scell:hover{background:var(--s2);transform:translateY(-3px)}
+.snum{font-family:var(--bebas);font-size:38px;letter-spacing:.04em;display:block;margin-bottom:4px}
+.b{color:var(--blue)}.g{color:var(--green)}.v{color:var(--violet)}.a{color:var(--amber)}.w{color:#fff}
+.slabel{font-size:11px;color:var(--muted)}
+
+/* ── SECTIONS ── */
+section{margin-top:90px}
+.sec-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.sec-h{font-family:var(--bebas);font-size:clamp(32px,4.5vw,54px);letter-spacing:.04em;color:#fff;margin-bottom:10px;line-height:1}
+.sec-d{font-family:var(--sans);color:var(--muted);font-size:16px;font-weight:500;max-width:560px;line-height:1.7;margin-bottom:34px}
+
+/* ── ARCH CARDS ── */
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.acard{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:26px 22px;position:relative;overflow:hidden;transition:border-color .25s,transform .25s,box-shadow .25s;cursor:default}
+.acard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--c),transparent)}
+.acard::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 0%,var(--cg),transparent);pointer-events:none}
+.acard.b{--c:var(--blue);--cg:rgba(96,165,250,.05)}.acard.g{--c:var(--green);--cg:rgba(52,211,153,.05)}.acard.v{--c:var(--violet);--cg:rgba(192,132,252,.05)}
+.acard.b:hover{border-color:rgba(96,165,250,.4);transform:translateY(-6px);box-shadow:0 20px 60px rgba(96,165,250,.12)}
+.acard.g:hover{border-color:rgba(52,211,153,.4);transform:translateY(-6px);box-shadow:0 20px 60px rgba(52,211,153,.12)}
+.acard.v:hover{border-color:rgba(192,132,252,.4);transform:translateY(-6px);box-shadow:0 20px 60px rgba(192,132,252,.12)}
+.abadge{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border-radius:4px;margin-bottom:14px;display:inline-block;font-weight:700}
+.acard.b .abadge{color:var(--blue);background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.22)}
+.acard.g .abadge{color:var(--green);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.22)}
+.acard.v .abadge{color:var(--violet);background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.22)}
+.atitle{font-size:17px;font-weight:700;color:#fff;margin-bottom:4px}
+.amodel{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:16px}
+.alist{list-style:none}.alist li{font-size:12.5px;padding:4px 0;display:flex;gap:8px;align-items:flex-start}
+.pos{color:var(--text)}.neg{color:var(--muted)}
+.ico{font-family:var(--mono);font-size:11px;flex-shrink:0;margin-top:2px}
+.acard.b .pos .ico::before{content:'+';color:var(--blue)}
+.acard.g .pos .ico::before{content:'+';color:var(--green)}
+.acard.v .pos .ico::before{content:'+';color:var(--violet)}
+.neg .ico::before{content:'−';color:var(--muted)}
+
+/* ── TABLE ── */
+.tbl-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:box-shadow .3s}
+.tbl-wrap:hover{box-shadow:0 16px 56px rgba(0,0,0,.45)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--s2)}
+th{padding:13px 16px;text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border);font-weight:600}
+th.bh{color:var(--blue)}th.gh{color:var(--green)}th.vh{color:var(--violet)}th.mh{color:var(--muted)}
+td{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .15s}
+tbody tr:hover td{background:rgba(255,255,255,.025)}
+.mlbl2{color:var(--muted)}
+.val{font-family:var(--mono);font-size:12px;color:var(--text)}
+.bval{font-family:var(--mono);font-size:12px;font-weight:700}
+.bval.b{color:var(--blue)}.bval.g{color:var(--green)}.bval.v{color:var(--violet)}
+.badval{font-family:var(--mono);font-size:12px;color:var(--red)}
+.dimval{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tag{display:inline-flex;font-size:9px;padding:1px 6px;border-radius:3px;margin-left:6px;font-weight:700;vertical-align:middle}
+.tag.g{color:var(--green);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.22)}
+.tag.b{color:var(--blue);background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.22)}
+
+/* ── CHARTS ── */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.ccard{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:22px;transition:border-color .25s,transform .25s,box-shadow .25s}
+.ccard:hover{border-color:rgba(255,255,255,.16);transform:translateY(-5px);box-shadow:0 24px 70px rgba(0,0,0,.45)}
+.chead{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.ctitle{font-size:13px;font-weight:600;color:var(--text)}
+.cleg{display:flex;gap:10px}
+.cl{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.cld{width:8px;height:8px;border-radius:2px}
+
+/* ── FINDINGS ── */
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.fcard{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px;transition:border-color .25s,transform .25s,box-shadow .25s}
+.fcard:hover{border-color:rgba(255,255,255,.16);transform:translateY(-5px);box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.ficon{font-size:22px;margin-bottom:10px;display:block}
+.ftitle{font-size:13px;font-weight:700;color:#fff;margin-bottom:5px}
+.fbody{font-size:12px;color:var(--muted);line-height:1.65}
+.fbody code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px;color:var(--text)}
+
+/* ── DECISION ── */
+.dw{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:box-shadow .3s}
+.dw:hover{box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.dr{display:grid;grid-template-columns:2fr 1fr 2fr;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s}
+.dr:last-child{border-bottom:none}.dr.dhead{background:var(--s2);border-bottom:1px solid var(--border)}
+.dr:not(.dhead):hover{background:rgba(255,255,255,.025)}
+.dc{padding:13px 18px;font-size:13px}
+.dc.dhead{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.dpick{font-family:var(--mono);font-size:12px;font-weight:700}
+.dpick.b{color:var(--blue)}.dpick.g{color:var(--green)}.dpick.v{color:var(--violet)}
+.dwhy{color:var(--muted);font-size:12px}
+
+/* ── METRICS TABLE ── */
+.metw{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:box-shadow .3s}
+.metw:hover{box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.metr{display:grid;grid-template-columns:40px 170px 1fr 80px;align-items:center;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s}
+.metr:last-child{border-bottom:none}.metr.mhead{background:var(--s2);border-bottom:1px solid var(--border)}
+.metr:not(.mhead):hover{background:rgba(255,255,255,.025)}
+.mc2{padding:12px 14px;font-size:13px}
+.mc2.mhead{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mico{text-align:center;font-size:16px}
+.mname{font-weight:600;color:#fff;font-size:13px}
+.mdesc{color:var(--muted);font-size:12px}
+.munit{font-family:var(--mono);font-size:11px;color:var(--violet);text-align:right}
+
+/* ── KB PILLS ── */
+.kbw{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:26px;transition:box-shadow .3s}
+.kbw:hover{box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.kbg{margin-bottom:20px}.kbg:last-child{margin-bottom:0}
+.kbcat{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.pills{display:flex;flex-wrap:wrap;gap:7px}
+.pill{font-family:var(--mono);font-size:11px;padding:4px 12px;border-radius:5px;background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.18);color:var(--blue);transition:all .18s;cursor:default}
+.pill:hover{background:rgba(96,165,250,.18);transform:translateY(-2px);box-shadow:0 4px 14px rgba(96,165,250,.18)}
+.pill.g{background:rgba(52,211,153,.07);border-color:rgba(52,211,153,.18);color:var(--green)}
+.pill.g:hover{background:rgba(52,211,153,.18);box-shadow:0 4px 14px rgba(52,211,153,.18)}
+
+/* ── TECH ── */
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tcard{background:var(--s1);border:1px solid var(--border);border-radius:9px;padding:16px 18px;display:flex;align-items:flex-start;gap:14px;transition:border-color .22s,transform .22s,box-shadow .22s}
+.tcard:hover{border-color:rgba(255,255,255,.16);transform:translateY(-3px);box-shadow:0 10px 32px rgba(0,0,0,.4)}
+.ticon{font-size:24px;flex-shrink:0;margin-top:2px}
+.tlayer{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.tname{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px}
+.tdesc{font-size:11px;color:var(--muted)}
+
+/* ── SETUP ── */
+.setup{background:#060e06;border:1px solid rgba(52,211,153,.18);border-radius:var(--r);overflow:hidden;box-shadow:0 0 60px rgba(52,211,153,.04);transition:box-shadow .3s}
+.setup:hover{box-shadow:0 0 80px rgba(52,211,153,.08)}
+.sbar2{background:rgba(52,211,153,.06);border-bottom:1px solid rgba(52,211,153,.14);padding:10px 20px;display:flex;align-items:center;gap:10px}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:cdot 2s ease-in-out infinite}
+.sbartxt{font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.1em;text-transform:uppercase;opacity:.8}
+.sbody{padding:24px;font-family:var(--mono);font-size:12px;line-height:2.1}
+.steplbl{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--green);opacity:.7;display:block;margin-top:20px;margin-bottom:4px}
+.steplbl:first-child{margin-top:0}
+.cmd{color:#e2e8f0}.cmt{color:#2d4a38}
+
+/* ── ROADMAP ── */
+.rm{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:box-shadow .3s}
+.rm:hover{box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.ri{display:flex;align-items:flex-start;gap:16px;padding:14px 22px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s}
+.ri:last-child{border-bottom:none}.ri:hover{background:rgba(255,255,255,.02)}
+.rst{font-family:var(--mono);font-size:11px;min-width:60px;flex-shrink:0;padding-top:1px}
+.rst.done{color:var(--green)}.rst.soon{color:var(--muted)}
+.rt{font-size:13px;color:var(--text)}
+
+/* ── CTA ── */
+.cta{margin-top:90px;text-align:center;padding:60px 32px;background:var(--s1);border:1px solid var(--border);border-radius:18px;position:relative;overflow:hidden;transition:box-shadow .3s}
+.cta:hover{box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.cta::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--blue),var(--violet),transparent)}
+.cta::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(96,165,250,.05),transparent);pointer-events:none}
+.cta-title{font-family:var(--bebas);font-size:clamp(32px,4.5vw,58px);letter-spacing:.05em;color:#fff;margin-bottom:10px}
+.cta-sub{color:var(--muted);font-size:15px;margin-bottom:28px}
+.cta-btns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;position:relative;z-index:1}
+
+/* ── FOOTER ── */
+footer{margin-top:48px;padding:22px 0;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--muted)}
+footer a{color:var(--blue);text-decoration:none}footer a:hover{text-decoration:underline}
+
+@media(max-width:700px){
+  .three,.cgrid,.fgrid,.tgrid{grid-template-columns:1fr}
+  .mcols,.stats{grid-template-columns:1fr}
+  .dr{grid-template-columns:1fr}
+  .metr{grid-template-columns:40px 1fr}.mdesc,.munit{display:none}
+}
+</style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+<div class="dot-grid"></div>
+<div class="blue-wash"></div>
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+<div class="orb o3"></div>
+<div class="orb o4"></div>
+<div class="orb o5"></div>
+<div class="vignette"></div>
+
+<div class="page">
+
+<!-- NAV -->
+<nav>
+  <div class="nbrand">
+    <div class="nlogo">CS</div>
+    <div><div class="nname">CodeSage</div><div class="ntag">by Adityax-07</div></div>
+  </div>
+  <div class="nlinks">
+    <a class="nlink ghost" href="https://github.com/Adityax-07/LLM-vs-RAG-vs-Fine-Tuning-" target="_blank" rel="noopener">GitHub</a>
+    <a class="nlink nprimary" href="https://huggingface.co/spaces/Adityax-07/CodeSage" target="_blank" rel="noopener">▶ Try Live Demo</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero rv">
+  <div class="chip"><span class="chipdot"></span>Live on Hugging Face Spaces · Free</div>
+  <h1>Three AIs.<br><em>One Question.</em><br>Real Scores.</h1>
+  <p class="sub">Enter any programming question. CodeSage fires it at Baseline LLM, RAG, and Fine-Tuned simultaneously — auto-evaluates every answer across 8 metrics.</p>
+  <div class="btns">
+    <a class="btn bp" href="https://huggingface.co/spaces/Adityax-07/CodeSage" target="_blank" rel="noopener">▶ Open CodeSage</a>
+    <a class="btn bo" href="https://github.com/Adityax-07/LLM-vs-RAG-vs-Fine-Tuning-" target="_blank" rel="noopener">View Source</a>
+  </div>
+  <!-- HERO SCREENSHOT -->
+  <div class="hero-ss rv d1" style="transition-delay:.1s">
+    <img src="../images/Screenshot 2026-05-18 001447.png" alt="CodeSage App Screenshot" class="hero-ss-img" />
+  </div>
+  <!-- APP MOCK -->
+  <div class="mock rv d2 fl" style="--fd:7s;--fy:-14px;--fr:.2deg;--fdel:0s">
+    <div class="mbar">
+      <div class="mdots"><span></span><span></span><span></span></div>
+      <div class="murl">adityax-07-codesage.hf.space</div>
+    </div>
+    <div class="mbody">
+      <div class="mq"><span id="mqT"></span><span class="cursor">&nbsp;</span></div>
+      <div class="mcols">
+        <div class="mc b">
+          <div class="mlbl">⚡ Baseline LLM</div>
+          <div class="mtxt">QuickSort: O(n log n) average via divide-and-conquer pivot splitting...</div>
+          <div class="srow"><span class="slbl">Accuracy</span><div class="sbar"><div class="sbf" data-w="61" style="background:var(--blue)"></div></div><span class="sval">61%</span></div>
+          <div class="srow"><span class="slbl">Hallucin.</span><div class="sbar"><div class="sbf" data-w="43" style="background:var(--red)"></div></div><span class="sval" style="color:var(--red)">43%</span></div>
+          <div class="srow"><span class="slbl">Latency</span><div class="sbar"><div class="sbf" data-w="40" style="background:var(--blue)"></div></div><span class="sval">1.2s</span></div>
+        </div>
+        <div class="mc g">
+          <div class="mlbl">📚 RAG Chatbot</div>
+          <div class="mtxt">Retrieved: QuickSort O(n log n) avg. Expected splits: log n levels × n ops...</div>
+          <div class="srow"><span class="slbl">Accuracy</span><div class="sbar"><div class="sbf" data-w="82" style="background:var(--green)"></div></div><span class="sval">82%</span></div>
+          <div class="srow"><span class="slbl">Hallucin.</span><div class="sbar"><div class="sbf" data-w="10" style="background:var(--red)"></div></div><span class="sval" style="color:var(--green)">9.8%</span></div>
+          <div class="srow"><span class="slbl">Latency</span><div class="sbar"><div class="sbf" data-w="70" style="background:var(--green)"></div></div><span class="sval">2.1s</span></div>
+        </div>
+        <div class="mc v">
+          <div class="mlbl">🧠 Fine-Tuned</div>
+          <div class="mtxt">QuickSort: Θ(n log n) avg. Worst O(n²). Expected depth log n partitions...</div>
+          <div class="srow"><span class="slbl">Accuracy</span><div class="sbar"><div class="sbf" data-w="85" style="background:var(--violet)"></div></div><span class="sval">85%</span></div>
+          <div class="srow"><span class="slbl">Hallucin.</span><div class="sbar"><div class="sbf" data-w="1" style="background:var(--red)"></div></div><span class="sval" style="color:var(--green)">0%</span></div>
+          <div class="srow"><span class="slbl">Latency</span><div class="sbar"><div class="sbf" data-w="13" style="background:var(--violet)"></div></div><span class="sval">0.4s</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats rv">
+  <div class="scell"><span class="snum b" data-cnt="50">0</span><div class="slabel">Benchmark Q&amp;As</div></div>
+  <div class="scell"><span class="snum w" data-cnt="3">0</span><div class="slabel">AI Systems</div></div>
+  <div class="scell"><span class="snum v" data-cnt="8">0</span><div class="slabel">Auto Metrics</div></div>
+  <div class="scell"><span class="snum g">0%</span><div class="slabel">FT Hallucination</div></div>
+  <div class="scell"><span class="snum a">10×</span><div class="slabel">Cost Reduction</div></div>
+</div>
+
+<!-- ARCHITECTURES -->
+<section>
+  <div class="sec-lbl rv">How It Works</div>
+  <div class="sec-h rv">Three architectures. One benchmark.</div>
+  <div class="sec-d rv">Same question, same moment, real output from all three.</div>
+  <div class="three">
+    <div class="acard b rl d1 fl" style="--fd:7s;--fy:-8px;--fr:.35deg;--fdel:0s">
+      <div class="abadge">System 1 · Baseline</div><div class="atitle">Baseline LLM</div>
+      <div class="amodel">Llama-3.1-8B · Groq · zero-shot</div>
+      <ul class="alist">
+        <li class="pos"><span class="ico"></span>Zero setup, instant</li>
+        <li class="pos"><span class="ico"></span>Broad topic coverage</li>
+        <li class="pos"><span class="ico"></span>No infrastructure</li>
+        <li class="neg"><span class="ico"></span>Hallucinates 43.2%</li>
+        <li class="neg"><span class="ico"></span>No domain knowledge</li>
+      </ul>
+    </div>
+    <div class="acard g rv d2 fl" style="--fd:9s;--fy:-12px;--fr:-.25deg;--fdel:-2s">
+      <div class="abadge">System 2 · RAG</div><div class="atitle">RAG Pipeline</div>
+      <div class="amodel">FAISS + all-MiniLM-L6-v2 · top-3</div>
+      <ul class="alist">
+        <li class="pos"><span class="ico"></span>Update docs, no retrain</li>
+        <li class="pos"><span class="ico"></span>Grounded + traceable</li>
+        <li class="pos"><span class="ico"></span>Citations visible</li>
+        <li class="neg"><span class="ico"></span>Retrieval lag ~2.1s</li>
+        <li class="neg"><span class="ico"></span>Chunk quality matters</li>
+      </ul>
+    </div>
+    <div class="acard v rr d3 fl" style="--fd:8s;--fy:-10px;--fr:.4deg;--fdel:-4s">
+      <div class="abadge">System 3 · Fine-Tuned</div><div class="atitle">Fine-Tuned Model</div>
+      <div class="amodel">Qwen2.5-1.5B + LoRA r=8 α=32</div>
+      <ul class="alist">
+        <li class="pos"><span class="ico"></span>10× cheaper per query</li>
+        <li class="pos"><span class="ico"></span>0% hallucination</li>
+        <li class="pos"><span class="ico"></span>3× faster · 0.4s</li>
+        <li class="neg"><span class="ico"></span>Hard to update</li>
+        <li class="neg"><span class="ico"></span>Fixed domain</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- BENCHMARK TABLE -->
+<section>
+  <div class="sec-lbl rv">Results</div>
+  <div class="sec-h rv">Full benchmark · 50 Q × 3 Systems × 8 Metrics</div>
+  <div class="sec-d rv">Fully automated. Zero manual grading.</div>
+  <div class="tbl-wrap rv fl" style="--fd:10s;--fy:-7px;--fr:.12deg;--fdel:-1s">
+    <table>
+      <thead><tr><th class="mh">Metric</th><th class="bh">🔵 Baseline LLM</th><th class="gh">🟢 RAG Chatbot</th><th class="vh">🟣 Fine-Tuned</th></tr></thead>
+      <tbody>
+        <tr><td class="mlbl2">Answer Accuracy</td><td class="val">61.4%</td><td class="val">81.6%</td><td><span class="bval v">85.3%</span><span class="tag g">✨ best</span></td></tr>
+        <tr><td class="mlbl2">Hallucination Rate</td><td class="badval">43.2% ↑</td><td class="val">9.8%</td><td><span class="bval v">0.0%</span><span class="tag g">✨ best</span></td></tr>
+        <tr><td class="mlbl2">Answer Relevance</td><td class="val">0.714</td><td class="val">0.768</td><td><span class="bval v">0.891</span><span class="tag g">✨ best</span></td></tr>
+        <tr><td class="mlbl2">Groundedness</td><td class="dimval">—</td><td><span class="bval g">0.87</span><span class="tag b">✨ best</span></td><td class="dimval">—</td></tr>
+        <tr><td class="mlbl2">Avg Latency</td><td class="val">~1.2 s</td><td class="badval">~2.1 s</td><td><span class="bval v">~0.4 s</span><span class="tag g">✨ best</span></td></tr>
+        <tr><td class="mlbl2">Cost / Query</td><td class="val">~$0.0020</td><td class="badval">~$0.0030</td><td><span class="bval v">$0.0002</span><span class="tag g">✨ best</span></td></tr>
+        <tr><td class="mlbl2">Overall Score (/5)</td><td class="val">2.9</td><td class="val">3.8</td><td><span class="bval v">4.3</span><span class="tag g">✨ best</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- CHARTS -->
+<section>
+  <div class="sec-lbl rv">Visualized</div>
+  <div class="sec-h rv">Metrics at a glance</div>
+  <div class="cgrid rv">
+    <div class="ccard fl" style="--fd:8s;--fy:-9px;--fr:.22deg;--fdel:0s">
+      <div class="chead"><div class="ctitle">Accuracy vs Hallucination (%)</div><div class="cleg"><div class="cl"><div class="cld" style="background:var(--blue)"></div>Accuracy</div><div class="cl"><div class="cld" style="background:var(--red)"></div>Hallucin.</div></div></div>
+      <div style="height:200px;position:relative"><canvas id="c1"></canvas></div>
+    </div>
+    <div class="ccard fl" style="--fd:9s;--fy:-11px;--fr:-.22deg;--fdel:-2s">
+      <div class="chead"><div class="ctitle">Latency (s) &amp; Cost (×$0.001)</div><div class="cleg"><div class="cl"><div class="cld" style="background:var(--violet)"></div>Latency</div><div class="cl"><div class="cld" style="background:var(--green)"></div>Cost</div></div></div>
+      <div style="height:200px;position:relative"><canvas id="c2"></canvas></div>
+    </div>
+    <div class="ccard fl" style="--fd:11s;--fy:-8px;--fr:.16deg;--fdel:-4s">
+      <div class="chead"><div class="ctitle">Multi-Metric Radar</div><div class="cleg"><div class="cl"><div class="cld" style="background:var(--blue)"></div>Base</div><div class="cl"><div class="cld" style="background:var(--green)"></div>RAG</div><div class="cl"><div class="cld" style="background:var(--violet)"></div>FT</div></div></div>
+      <div style="height:200px;position:relative"><canvas id="c3"></canvas></div>
+    </div>
+    <div class="ccard fl" style="--fd:7s;--fy:-10px;--fr:-.3deg;--fdel:-1s">
+      <div class="chead"><div class="ctitle">Overall Score (/5)</div></div>
+      <div style="height:200px;position:relative"><canvas id="c4"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- FINDINGS -->
+<section>
+  <div class="sec-lbl rv">Insights</div>
+  <div class="sec-h rv">Key findings</div>
+  <div class="fgrid">
+    <div class="fcard rl d1 fl" style="--fd:8s;--fy:-7px;--fr:.25deg;--fdel:0s"><span class="ficon">🚫</span><div class="ftitle">Hallucination gap</div><div class="fbody">Baseline hallucinates <code>43.2%</code>. Fine-Tuning → <code>0%</code>.</div></div>
+    <div class="fcard rv d2 fl" style="--fd:9s;--fy:-9px;--fr:-.22deg;--fdel:-1s"><span class="ficon">📊</span><div class="ftitle">RAG cuts it 4.4×</div><div class="fbody"><code>43.2%</code> → <code>9.8%</code> through retrieval alone.</div></div>
+    <div class="fcard rr d3 fl" style="--fd:10s;--fy:-8px;--fr:.3deg;--fdel:-2s"><span class="ficon">💰</span><div class="ftitle">10× cheaper</div><div class="fbody"><code>$0.0002</code> vs <code>$0.002</code>. Local, zero API cost.</div></div>
+    <div class="fcard rl d1 fl" style="--fd:7s;--fy:-7px;--fr:-.14deg;--fdel:-3s"><span class="ficon">⚡</span><div class="ftitle">3× faster</div><div class="fbody"><code>0.4s</code> vs <code>1.2s</code>. No retrieval, no round-trip.</div></div>
+    <div class="fcard rv d2 fl" style="--fd:11s;--fy:-11px;--fr:.2deg;--fdel:-1.5s"><span class="ficon">🏆</span><div class="ftitle">RAG wins on trust</div><div class="fbody">Groundedness <code>0.87</code> — traceable to source chunks.</div></div>
+    <div class="fcard rr d3 fl" style="--fd:8.5s;--fy:-8px;--fr:-.3deg;--fdel:-4s"><span class="ficon">🔀</span><div class="ftitle">No universal winner</div><div class="fbody">RAG = updatable. FT = precision. Base = zero friction.</div></div>
+  </div>
+</section>
+
+<!-- DECISION GUIDE -->
+<section>
+  <div class="sec-lbl rv">Decision Guide</div>
+  <div class="sec-h rv">Which architecture should you use?</div>
+  <div class="dw rv fl" style="--fd:10s;--fy:-6px;--fr:.12deg;--fdel:-2s">
+    <div class="dr dhead"><div class="dc dhead">Situation</div><div class="dc dhead">Best Choice</div><div class="dc dhead">Reason</div></div>
+    <div class="dr"><div class="dc">Prototyping / general queries</div><div class="dc dpick b">Baseline LLM</div><div class="dc dwhy">Zero setup, broad topics</div></div>
+    <div class="dr"><div class="dc">Knowledge changes frequently</div><div class="dc dpick g">RAG</div><div class="dc dwhy">Update docs, no retraining</div></div>
+    <div class="dr"><div class="dc">Fixed domain, cost matters</div><div class="dc dpick v">Fine-Tuning</div><div class="dc dwhy">10× cheaper, 0% hallucination</div></div>
+    <div class="dr"><div class="dc">Need citations + traceability</div><div class="dc dpick g">RAG</div><div class="dc dwhy">Groundedness 0.87, visible sources</div></div>
+    <div class="dr"><div class="dc">Tight production latency SLA</div><div class="dc dpick v">Fine-Tuning</div><div class="dc dwhy">Local inference, no API overhead</div></div>
+  </div>
+</section>
+
+<!-- EVAL METRICS -->
+<section>
+  <div class="sec-lbl rv">Evaluation</div>
+  <div class="sec-h rv">8-dimensional auto-scoring</div>
+  <div class="sec-d rv">Every response scored by LLM judge — no human grading ever.</div>
+  <div class="metw rv fl" style="--fd:9s;--fy:-6px;--fr:-.1deg;--fdel:-3s">
+    <div class="metr mhead"><div class="mc2 mhead"></div><div class="mc2 mhead">Metric</div><div class="mc2 mhead">Description</div><div class="mc2 mhead munit">Unit</div></div>
+    <div class="metr"><div class="mc2 mico">🎯</div><div class="mc2 mname">Answer Accuracy</div><div class="mc2 mdesc">Cosine similarity vs reference embedding</div><div class="mc2 munit">%</div></div>
+    <div class="metr"><div class="mc2 mico">🔗</div><div class="mc2 mname">Groundedness</div><div class="mc2 mdesc">Cosine similarity vs retrieved context</div><div class="mc2 munit">0–1</div></div>
+    <div class="metr"><div class="mc2 mico">🚫</div><div class="mc2 mname">Hallucination Rate</div><div class="mc2 mdesc">% answers where accuracy &lt; 0.5</div><div class="mc2 munit">%</div></div>
+    <div class="metr"><div class="mc2 mico">📝</div><div class="mc2 mname">Answer Relevance</div><div class="mc2 mdesc">Cosine similarity vs question</div><div class="mc2 munit">0–1</div></div>
+    <div class="metr"><div class="mc2 mico">📊</div><div class="mc2 mname">Faithfulness</div><div class="mc2 mdesc">ROUGE-L token overlap with source</div><div class="mc2 munit">0–1</div></div>
+    <div class="metr"><div class="mc2 mico">⏱️</div><div class="mc2 mname">Avg Latency</div><div class="mc2 mdesc">Mean response time per query</div><div class="mc2 munit">sec</div></div>
+    <div class="metr"><div class="mc2 mico">💰</div><div class="mc2 mname">Cost / Query</div><div class="mc2 mdesc">Token-count cost estimate</div><div class="mc2 munit">USD</div></div>
+    <div class="metr"><div class="mc2 mico">⭐</div><div class="mc2 mname">Overall Score</div><div class="mc2 mdesc">30% Acc + 20% Ground + 20%(1−HR) + 15% Rel + 15% Faith</div><div class="mc2 munit">1–5</div></div>
+  </div>
+</section>
+
+<!-- KNOWLEDGE BASE -->
+<section>
+  <div class="sec-lbl rv">Knowledge Base</div>
+  <div class="sec-h rv">17 hand-crafted RAG documents</div>
+  <div class="kbw rv fl" style="--fd:10s;--fy:-7px;--fr:.18deg;--fdel:-1s">
+    <div class="kbg"><div class="kbcat">Algorithms &amp; Data Structures</div><div class="pills">
+      <span class="pill">binary_search</span><span class="pill">sorting_algorithms</span><span class="pill">dynamic_programming</span><span class="pill">graph_algorithms</span><span class="pill">trees</span><span class="pill">linked_list</span><span class="pill">stack_queue</span><span class="pill">recursion</span><span class="pill">backtracking</span><span class="pill">greedy_algorithms</span><span class="pill">hashing</span><span class="pill">heaps</span><span class="pill">big_o_notation</span><span class="pill">string_algorithms</span><span class="pill">two_pointers</span>
+    </div></div>
+    <div class="kbg"><div class="kbcat">Web &amp; Tooling</div><div class="pills">
+      <span class="pill g">react_hooks</span><span class="pill g">rest_api</span><span class="pill g">javascript_promises</span><span class="pill g">css_flexbox</span><span class="pill g">typescript_basics</span><span class="pill g">sql_basics</span><span class="pill g">git_basics</span>
+    </div></div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section>
+  <div class="sec-lbl rv">Tech Stack</div>
+  <div class="sec-h rv">What's under the hood</div>
+  <div class="tgrid rv">
+    <div class="tcard fl" style="--fd:8s;--fy:-6px;--fr:.22deg;--fdel:0s"><div class="ticon">🖥️</div><div><div class="tlayer">UI</div><div class="tname">Streamlit + Plotly</div><div class="tdesc">3-way dashboard + analytics charts</div></div></div>
+    <div class="tcard fl" style="--fd:9s;--fy:-8px;--fr:-.2deg;--fdel:-1s"><div class="ticon">⚡</div><div><div class="tlayer">LLM (S1+S2)</div><div class="tname">Groq · Llama-3.1-8B</div><div class="tdesc">Ultra-fast inference for Baseline + RAG</div></div></div>
+    <div class="tcard fl" style="--fd:7s;--fy:-7px;--fr:.3deg;--fdel:-2s"><div class="ticon">📦</div><div><div class="tlayer">Embeddings</div><div class="tname">all-MiniLM-L6-v2</div><div class="tdesc">Sentence transformer for semantic retrieval</div></div></div>
+    <div class="tcard fl" style="--fd:10s;--fy:-5px;--fr:-.12deg;--fdel:-3s"><div class="ticon">🗄️</div><div><div class="tlayer">Vector DB</div><div class="tname">FAISS (Facebook AI)</div><div class="tdesc">CPU semantic search over knowledge base</div></div></div>
+    <div class="tcard fl" style="--fd:9s;--fy:-9px;--fr:.2deg;--fdel:-.5s"><div class="ticon">🧠</div><div><div class="tlayer">Fine-Tuning</div><div class="tname">PEFT + LoRA r=8 α=32</div><div class="tdesc">Parameter-efficient adapter training</div></div></div>
+    <div class="tcard fl" style="--fd:8s;--fy:-6px;--fr:-.3deg;--fdel:-2s"><div class="ticon">🤗</div><div><div class="tlayer">Base Model</div><div class="tname">Qwen2.5-1.5B-Instruct</div><div class="tdesc">Alibaba compact LLM, run locally</div></div></div>
+    <div class="tcard fl" style="--fd:11s;--fy:-8px;--fr:.12deg;--fdel:-4s"><div class="ticon">☁️</div><div><div class="tlayer">Training</div><div class="tname">Google Colab T4 GPU</div><div class="tdesc">LoRA training ~10 min, free tier</div></div></div>
+    <div class="tcard fl" style="--fd:9s;--fy:-7px;--fr:-.22deg;--fdel:-1.5s"><div class="ticon">🔀</div><div><div class="tlayer">Orchestration</div><div class="tname">LangChain</div><div class="tdesc">RAG pipeline + FAISS + PDF ingestion</div></div></div>
+  </div>
+</section>
+
+<!-- SETUP -->
+<section>
+  <div class="sec-lbl rv">Get Started</div>
+  <div class="sec-h rv">Run locally in 3 steps</div>
+  <div class="setup rv fl" style="--fd:10s;--fy:-6px;--fr:.1deg;--fdel:-2s">
+    <div class="sbar2"><div class="sdot"></div><div class="sbartxt">bash · zsh · powershell</div></div>
+    <div class="sbody">
+      <span class="steplbl">01 — clone &amp; install</span>
+      <div class="cmd">git clone https://github.com/Adityax-07/LLM-vs-RAG-vs-Fine-Tuning-.git</div>
+      <div class="cmd">cd LLM-vs-RAG-vs-Fine-Tuning- &amp;&amp; pip install -r requirements.txt</div>
+      <span class="steplbl">02 — add Groq API key (free at console.groq.com)</span>
+      <div class="cmd">echo "GROQ_API_KEY=gsk_..." &gt; .env</div>
+      <span class="steplbl">03 — launch</span>
+      <div class="cmd">streamlit run demo.py</div>
+      <div class="cmt"># FAISS index auto-builds · S3 loads LoRA from checkpoint-25/</div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section>
+  <div class="sec-lbl rv">Roadmap</div>
+  <div class="sec-h rv">What's next</div>
+  <div class="rm rv fl" style="--fd:9s;--fy:-5px;--fr:.1deg;--fdel:-1s">
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">50-question auto-benchmark with persistent cache</div></div>
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">LoRA fine-tune checkpoint (checkpoint-25) shipped in repo</div></div>
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">Analytics dashboard with Plotly + TABLE II report</div></div>
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">PDF ingestion into RAG knowledge base</div></div>
+    <div class="ri"><div class="rst soon">⏳ soon</div><div class="rt">Push Qwen2.5 LoRA adapter to HuggingFace Hub</div></div>
+    <div class="ri"><div class="rst soon">⏳ soon</div><div class="rt">Full 3-system live demo on HuggingFace Spaces</div></div>
+    <div class="ri"><div class="rst soon">⏳ soon</div><div class="rt">Expand knowledge base: 17 → 50+ documents</div></div>
+    <div class="ri"><div class="rst soon">⏳ soon</div><div class="rt">RAGAS-style faithfulness + context precision metrics</div></div>
+    <div class="ri"><div class="rst soon">⏳ soon</div><div class="rt">Custom knowledge base upload via Streamlit UI</div></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta rv fl" style="--fd:12s;--fy:-8px;--fr:.08deg;--fdel:-2s">
+  <div class="cta-title">See it live. Judge for yourself.</div>
+  <div class="cta-sub">No signup. Ask a question, watch all three respond.</div>
+  <div class="cta-btns">
+    <a class="btn bp" href="https://huggingface.co/spaces/Adityax-07/CodeSage" target="_blank" rel="noopener">▶ Open CodeSage on HF Spaces</a>
+    <a class="btn bo" href="https://github.com/Adityax-07/LLM-vs-RAG-vs-Fine-Tuning-" target="_blank" rel="noopener">⭐ Star on GitHub</a>
+  </div>
+</div>
+
+<footer>
+  <div>Built by <a href="https://github.com/Adityax-07" target="_blank">Adityax-07</a> · New Delhi · Groq · HuggingFace · FAISS · LangChain</div>
+  <div><a href="https://huggingface.co/spaces/Adityax-07/CodeSage" target="_blank">HF Space →</a> &nbsp;·&nbsp; <a href="https://github.com/Adityax-07/LLM-vs-RAG-vs-Fine-Tuning-" target="_blank">GitHub →</a></div>
+</footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" crossorigin="anonymous"></script>
+<script>
+/* ── STAR CANVAS ── */
+(function(){
+  const cv = document.getElementById('starCanvas');
+  const ctx = cv.getContext('2d');
+  let W, H, stars = [], meteors = [];
+
+  function resize() {
+    W = cv.width = window.innerWidth;
+    H = cv.height = window.innerHeight;
+  }
+
+  function mkStar() {
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.6 + 0.2,
+      baseAlpha: Math.random() * 0.65 + 0.1,
+      speed: Math.random() * 0.0003 + 0.00008,
+      phase: Math.random() * Math.PI * 2,
+      color: ['#ffffff','#c5d8ff','#ffd5ef','#d0c4ff','#c5f0e0'][Math.floor(Math.random()*5)]
+    };
+  }
+
+  function mkMeteor() {
+    const x = Math.random() * W * 0.6;
+    const y = Math.random() * H * 0.35;
+    const angle = Math.PI / 4 + (Math.random() - 0.5) * 0.4;
+    const speed = 8 + Math.random() * 10;
+    return { x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, len: 100+Math.random()*150, alpha: 1, alive: true };
+  }
+
+  function init() {
+    stars = [];
+    for (let i = 0; i < 320; i++) stars.push(mkStar());
+  }
+
+  function drawFrame(t) {
+    ctx.clearRect(0, 0, W, H);
+    for (const s of stars) {
+      const a = s.baseAlpha * (0.4 + 0.6 * Math.sin(t * s.speed * 1000 + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = s.color;
+      ctx.globalAlpha = a;
+      ctx.fill();
+      if (s.r > 1.2 && a > 0.5) {
+        ctx.globalAlpha = a * 0.3;
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(s.x - s.r * 2.5, s.y); ctx.lineTo(s.x + s.r * 2.5, s.y);
+        ctx.moveTo(s.x, s.y - s.r * 2.5); ctx.lineTo(s.x, s.y + s.r * 2.5);
+        ctx.stroke();
+      }
+    }
+    for (let i = meteors.length - 1; i >= 0; i--) {
+      const m = meteors[i];
+      if (!m.alive) { meteors.splice(i, 1); continue; }
+      const tx = m.x - m.vx * (m.len / 10);
+      const ty = m.y - m.vy * (m.len / 10);
+      const g = ctx.createLinearGradient(m.x, m.y, tx, ty);
+      g.addColorStop(0, `rgba(255,255,255,${m.alpha})`);
+      g.addColorStop(0.3, `rgba(180,210,255,${m.alpha * 0.5})`);
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.beginPath();
+      ctx.moveTo(m.x, m.y);
+      ctx.lineTo(tx, ty);
+      ctx.strokeStyle = g;
+      ctx.lineWidth = 1.8;
+      ctx.globalAlpha = m.alpha;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, 2, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,' + m.alpha + ')';
+      ctx.fill();
+      m.x += m.vx; m.y += m.vy;
+      m.alpha -= 0.020;
+      if (m.alpha <= 0 || m.x > W || m.y > H) m.alive = false;
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  let lastMeteor = 0;
+  function loop(t) {
+    drawFrame(t);
+    if (t - lastMeteor > 2800 + Math.random() * 2400) {
+      meteors.push(mkMeteor());
+      lastMeteor = t;
+    }
+    requestAnimationFrame(loop);
+  }
+
+  resize();
+  init();
+  window.addEventListener('resize', () => { resize(); init(); });
+  requestAnimationFrame(loop);
+})();
+
+/* ── SCROLL REVEAL ── */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.09 });
+document.querySelectorAll('.rv,.rl,.rr').forEach(el => io.observe(el));
+
+/* ── ANIMATED COUNTERS ── */
+const cio = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target, target = +el.dataset.cnt;
+    let start = null;
+    (function step(ts) {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / 1300, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(ease * target);
+      if (p < 1) requestAnimationFrame(step);
+    })(performance.now());
+    cio.unobserve(el);
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('[data-cnt]').forEach(c => cio.observe(c));
+
+/* ── SCORE BARS ── */
+setTimeout(() => {
+  document.querySelectorAll('.sbf').forEach(b => {
+    b.style.width = b.dataset.w + '%';
+  });
+}, 800);
+
+/* ── TYPEWRITER ── */
+const queries = [
+  "What is the time complexity of quicksort?",
+  "Explain React hooks with an example.",
+  "How does binary search work?",
+  "Difference between SQL JOIN types?",
+  "Describe backtracking algorithm.",
+  "What is memoization in dynamic programming?",
+  "Explain the two pointers technique."
+];
+let qi = 0, ci = 0, typing = true;
+const mqEl = document.getElementById('mqT');
+
+function typeQ() {
+  const q = queries[qi];
+  if (typing) {
+    mqEl.textContent = q.slice(0, ++ci);
+    if (ci >= q.length) { typing = false; setTimeout(typeQ, 2200); return; }
+    setTimeout(typeQ, 55 + Math.random() * 35);
+  } else {
+    if (ci > 0) { mqEl.textContent = q.slice(0, --ci); setTimeout(typeQ, 18); }
+    else { qi = (qi + 1) % queries.length; typing = true; setTimeout(typeQ, 350); }
+  }
+}
+setTimeout(typeQ, 900);
+
+/* ── CHARTS ── */
+window.addEventListener('load', function () {
+  Chart.defaults.color = '#55637a';
+  Chart.defaults.font.family = "'JetBrains Mono', monospace";
+  Chart.defaults.font.size = 10;
+  const L = ['Baseline', 'RAG', 'Fine-Tuned'];
+  const A = { duration: 1500, easing: 'easeOutQuart' };
+
+  new Chart(document.getElementById('c1'), {
+    type: 'bar',
+    data: { labels: L, datasets: [
+      { label: 'Accuracy %', data: [61.4, 81.6, 85.3], backgroundColor: ['rgba(96,165,250,.28)','rgba(96,165,250,.56)','rgba(96,165,250,.86)'], borderColor: 'rgba(96,165,250,.8)', borderWidth: 1, borderRadius: 4, borderSkipped: false },
+      { label: 'Hallucin %', data: [43.2, 9.8, 0], backgroundColor: ['rgba(248,113,113,.65)','rgba(248,113,113,.32)','rgba(248,113,113,.07)'], borderColor: 'rgba(248,113,113,.7)', borderWidth: 1, borderRadius: 4, borderSkipped: false }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, animation: A, scales: { y: { max: 100, ticks: { color: '#55637a' }, grid: { color: 'rgba(255,255,255,.04)' } }, x: { ticks: { color: '#55637a' }, grid: { display: false } } }, plugins: { legend: { display: false } } }
+  });
+
+  new Chart(document.getElementById('c2'), {
+    type: 'bar',
+    data: { labels: L, datasets: [
+      { label: 'Latency', data: [1.2, 2.1, 0.4], backgroundColor: ['rgba(192,132,252,.3)','rgba(192,132,252,.6)','rgba(192,132,252,.86)'], borderColor: 'rgba(192,132,252,.8)', borderWidth: 1, borderRadius: 4, borderSkipped: false },
+      { label: 'Cost', data: [2, 3, 0.2], backgroundColor: ['rgba(52,211,153,.28)','rgba(52,211,153,.56)','rgba(52,211,153,.86)'], borderColor: 'rgba(52,211,153,.8)', borderWidth: 1, borderRadius: 4, borderSkipped: false }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, animation: A, scales: { y: { ticks: { color: '#55637a' }, grid: { color: 'rgba(255,255,255,.04)' } }, x: { ticks: { color: '#55637a' }, grid: { display: false } } }, plugins: { legend: { display: false } } }
+  });
+
+  new Chart(document.getElementById('c3'), {
+    type: 'radar',
+    data: {
+      labels: ['Accuracy', 'Relevance', 'Speed', 'Cost Eff.', 'Anti-Halluc.'],
+      datasets: [
+        { label: 'Baseline', data: [61,71,67,33,57], backgroundColor: 'rgba(96,165,250,.07)', borderColor: 'rgba(96,165,250,.7)', borderWidth: 1.5, pointBackgroundColor: '#60a5fa', pointRadius: 3 },
+        { label: 'RAG', data: [82,77,52,67,90], backgroundColor: 'rgba(52,211,153,.07)', borderColor: 'rgba(52,211,153,.7)', borderWidth: 1.5, pointBackgroundColor: '#34d399', pointRadius: 3 },
+        { label: 'FT', data: [85,89,95,100,100], backgroundColor: 'rgba(192,132,252,.07)', borderColor: 'rgba(192,132,252,.7)', borderWidth: 1.5, pointBackgroundColor: '#c084fc', pointRadius: 3 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1800, easing: 'easeOutQuart' }, scales: { r: { min: 0, max: 100, ticks: { display: false }, grid: { color: 'rgba(255,255,255,.07)' }, pointLabels: { color: '#55637a', font: { size: 9 } } } }, plugins: { legend: { display: false } } }
+  });
+
+  new Chart(document.getElementById('c4'), {
+    type: 'bar',
+    data: { labels: L, datasets: [{ data: [2.9, 3.8, 4.3], backgroundColor: ['rgba(96,165,250,.5)','rgba(52,211,153,.56)','rgba(192,132,252,.76)'], borderColor: ['#60a5fa','#34d399','#c084fc'], borderWidth: 1, borderRadius: 5, borderSkipped: false }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: A, scales: { x: { max: 5, ticks: { color: '#55637a' }, grid: { color: 'rgba(255,255,255,.04)' } }, y: { ticks: { color: '#55637a' }, grid: { display: false } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Score: ' + c.parsed.x + ' / 5' } } } }
+  });
+});
+</script>
+</body>
+</html>

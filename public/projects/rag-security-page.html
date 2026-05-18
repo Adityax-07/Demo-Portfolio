@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Security Defense · 5-Layer Defense · CrowdStrike 10-K</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#010a03;--s1:#060f07;--s2:#0a160b;
+  --border:rgba(255,255,255,.07);--text:#d0e8d4;--muted:#3d5e42;
+  --green:#22c55e;--emerald:#10b981;--lime:#86efac;
+  --red:#f87171;--orange:#fb923c;--amber:#fbbf24;--cyan:#22d3ee;
+  --mono:'JetBrains Mono',monospace;--sans:'Rajdhani',sans-serif;
+  --display:'Cormorant Garamond',serif;--bebas:'Bebas Neue',sans-serif;--r:12px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;font-weight:500;line-height:1.6;overflow-x:hidden;padding-top:56px}
+
+#starCanvas{position:fixed;inset:0;z-index:0;pointer-events:none;display:block}
+.dot-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(34,197,94,.09) 1px,transparent 1px);background-size:28px 28px}
+.green-wash{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 110% 55% at 50% 0%,rgba(34,197,94,.08) 0%,transparent 60%),
+    radial-gradient(ellipse 70% 45% at 0% 100%,rgba(16,185,129,.07) 0%,transparent 55%),
+    radial-gradient(ellipse 55% 40% at 100% 40%,rgba(34,211,238,.04) 0%,transparent 50%)}
+.vignette{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 40%,transparent 32%,rgba(1,10,3,.70) 70%,rgba(1,10,3,.95) 100%)}
+.orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;will-change:transform}
+.o1{width:1100px;height:1100px;top:-420px;left:-320px;background:radial-gradient(circle,rgba(34,197,94,.22) 0%,rgba(16,185,129,.10) 40%,transparent 70%);filter:blur(110px);animation:oA 28s ease-in-out infinite alternate}
+.o2{width:900px;height:900px;bottom:-360px;right:-280px;background:radial-gradient(circle,rgba(16,185,129,.18) 0%,rgba(34,197,94,.07) 40%,transparent 70%);filter:blur(115px);animation:oB 34s ease-in-out infinite alternate}
+.o3{width:700px;height:700px;top:30%;left:35%;background:radial-gradient(circle,rgba(34,197,94,.12) 0%,rgba(16,185,129,.05) 45%,transparent 70%);filter:blur(90px);animation:oC 30s ease-in-out infinite alternate}
+.o4{width:550px;height:550px;top:8%;right:8%;background:radial-gradient(circle,rgba(34,211,238,.08) 0%,rgba(34,197,94,.04) 60%,transparent 80%);filter:blur(100px);animation:oD 22s ease-in-out infinite alternate}
+.o5{width:480px;height:480px;bottom:12%;left:8%;background:radial-gradient(circle,rgba(16,185,129,.10) 0%,transparent 65%);filter:blur(90px);animation:oE 26s ease-in-out infinite alternate}
+@keyframes oA{from{transform:translate(0,0) scale(1)}to{transform:translate(90px,110px) scale(1.14)}}
+@keyframes oB{from{transform:translate(0,0) scale(1)}to{transform:translate(-70px,-90px) scale(1.11)}}
+@keyframes oC{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.22)}}
+@keyframes oD{from{transform:translate(0,0) scale(1)}to{transform:translate(-55px,75px) scale(1.09)}}
+@keyframes oE{from{transform:translate(0,0) scale(1)}to{transform:translate(65px,-55px) scale(1.17)}}
+
+.page{position:relative;z-index:1;max-width:1060px;margin:0 auto;padding:0 28px 120px}
+
+/* ── NAV ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid rgba(34,197,94,.14);position:sticky;top:0;z-index:300;background:rgba(1,10,3,.86);backdrop-filter:blur(24px)}
+.nbrand{display:flex;align-items:center;gap:10px}
+.nlogo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--green),var(--emerald));display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:#000;box-shadow:0 0 22px rgba(34,197,94,.45)}
+.nname{font-family:var(--bebas);font-size:20px;letter-spacing:.06em;color:#fff}
+.ntag{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em}
+.nlinks{display:flex;gap:6px}
+.nlink{font-size:13px;font-weight:500;padding:7px 14px;border-radius:7px;text-decoration:none;transition:all .18s}
+.ghost{color:var(--muted)}.ghost:hover{color:var(--text);background:var(--s1)}
+.nprimary{color:#000;background:linear-gradient(135deg,var(--green),var(--emerald))}.nprimary:hover{box-shadow:0 0 28px rgba(34,197,94,.55);transform:translateY(-1px)}
+
+/* ── REVEAL ── */
+.rv{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.rv.in{opacity:1;transform:none}
+.rl{opacity:0;transform:translateX(-40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.rl.in{opacity:1;transform:none}
+.rr{opacity:0;transform:translateX(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.rr.in{opacity:1;transform:none}
+.d1{transition-delay:.07s}.d2{transition-delay:.15s}.d3{transition-delay:.23s}.d4{transition-delay:.31s}
+.fl{animation:fl var(--fd,7s) ease-in-out infinite;animation-delay:var(--fdel,0s)}
+@keyframes fl{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(var(--fy,-10px)) rotate(var(--fr,.3deg))}}
+
+/* ── HERO ── */
+.hero{padding:90px 0 64px;text-align:center}
+.chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--green);background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.26);border-radius:20px;padding:5px 16px;margin-bottom:28px}
+.chipdot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:cdot 2s ease-in-out infinite}
+@keyframes cdot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,.5)}50%{opacity:.4;box-shadow:0 0 0 8px rgba(34,197,94,0)}}
+h1{font-family:var(--display);font-size:clamp(46px,7.5vw,95px);font-weight:700;font-style:italic;line-height:.96;letter-spacing:-.01em;color:#fff;margin-bottom:18px}
+h1 em{font-style:normal;background:linear-gradient(135deg,var(--green) 10%,var(--lime) 50%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% 200%;animation:gs 4s ease infinite}
+@keyframes gs{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.sub{font-family:var(--sans);font-size:clamp(15px,1.8vw,20px);font-weight:500;color:var(--muted);max-width:620px;margin:0 auto 36px;line-height:1.75}
+.btns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:60px}
+.btn{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;padding:12px 26px;border-radius:9px;text-decoration:none;transition:all .22s;border:1px solid transparent}
+.bp{background:linear-gradient(135deg,var(--green),var(--emerald));color:#000}.bp:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(34,197,94,.45)}
+.bo{background:rgba(255,255,255,.04);color:var(--text);border-color:var(--border)}.bo:hover{background:var(--s1);transform:translateY(-1px)}
+
+/* ── HERO SS ── */
+.hero-ss{margin:0 auto 56px;max-width:880px;border-radius:18px;overflow:hidden;border:1px solid rgba(34,197,94,.20);box-shadow:0 0 0 1px rgba(255,255,255,.04),0 40px 120px rgba(0,0,0,.7),0 0 80px rgba(34,197,94,.12);position:relative}
+.hero-ss::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 75%,rgba(1,10,3,.92) 100%);pointer-events:none;z-index:1}
+.hero-ss-img{width:100%;display:block;border-radius:18px}
+
+/* ── ATTACK TERMINAL ── */
+.aterm{background:#03080a;border:1px solid rgba(34,197,94,.18);border-radius:16px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.65),0 0 60px rgba(34,197,94,.06);margin-bottom:90px}
+.abar{background:#040c06;border-bottom:1px solid rgba(34,197,94,.14);padding:12px 18px;display:flex;align-items:center;gap:10px}
+.adots{display:flex;gap:6px}.adots span{width:10px;height:10px;border-radius:50%}
+.adots span:nth-child(1){background:#ff5f57}.adots span:nth-child(2){background:#febc2e}.adots span:nth-child(3){background:#28c840}
+.apath{flex:1;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;letter-spacing:.04em}
+.abody{padding:24px 26px;font-family:var(--mono);font-size:12px;overflow-x:auto}
+.aprompt{color:rgba(34,197,94,.8)}.acmd{color:#d0e8d4}.acmt{color:rgba(60,90,65,.8)}
+/* query trace grid */
+.qtbl{display:grid;grid-template-columns:minmax(220px,2fr) repeat(4,52px) minmax(110px,1fr);font-family:var(--mono);font-size:11px;margin-top:16px;row-gap:0}
+.qth{font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:0 0 9px;border-bottom:1px solid rgba(34,197,94,.18)}
+.qth.hq{color:rgba(34,197,94,.45)}.qth.hl{color:rgba(34,197,94,.35);text-align:center}
+.qtd{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.qtd.qsys{color:#a8c8ac;font-size:11px}
+.qpass{color:var(--green);font-weight:700;text-align:center}
+.qblock{color:var(--red);font-weight:700;text-align:center}
+.qdash{color:rgba(255,255,255,.18);text-align:center}
+.qdeny{color:var(--amber);font-weight:700;text-align:center}
+.qres-ok{color:var(--green);font-weight:700}
+.qres-blk{color:var(--red);font-weight:700}
+.qres-deny{color:var(--amber)}
+.qres-dim{color:var(--muted)}
+.nb{border-bottom:none!important}
+/* layer badges */
+.lbadge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.05em}
+.lbadge-g{color:var(--green);background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.22)}
+.lbadge-r{color:var(--red);background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22)}
+.lbadge-a{color:var(--amber);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.22)}
+.tcursor{border-right:2px solid var(--green);animation:blink .7s step-end infinite;display:inline-block;width:1px;height:13px;vertical-align:text-bottom}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:90px}
+.scell{background:var(--s1);padding:22px 10px;text-align:center;border-right:1px solid var(--border);transition:background .2s,transform .2s;cursor:default}
+.scell:last-child{border-right:none}.scell:hover{background:var(--s2);transform:translateY(-3px)}
+.snum{font-family:var(--bebas);font-size:38px;letter-spacing:.04em;display:block;margin-bottom:4px}
+.g{color:var(--green)}.em{color:var(--emerald)}.cy{color:var(--cyan)}.re{color:var(--red)}.w{color:#fff}
+.slabel{font-size:11px;color:var(--muted)}
+
+/* ── SECTIONS ── */
+section{margin-top:90px}
+.sec-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.sec-h{font-family:var(--bebas);font-size:clamp(32px,4.5vw,54px);letter-spacing:.04em;color:#fff;margin-bottom:10px;line-height:1}
+.sec-d{font-family:var(--sans);color:var(--muted);font-size:16px;font-weight:500;max-width:560px;line-height:1.7;margin-bottom:34px}
+
+/* ── 5-LAYER PIPELINE ── */
+.pipeline{display:flex;flex-direction:column;gap:0;position:relative}
+.pipeline::before{content:'';position:absolute;left:27px;top:40px;bottom:40px;width:2px;background:linear-gradient(to bottom,rgba(34,197,94,.6),rgba(16,185,129,.3),rgba(34,197,94,.6));z-index:0}
+.layer{display:flex;gap:20px;align-items:flex-start;padding:20px 0;position:relative;z-index:1}
+.layer:last-child{padding-bottom:0}
+.layer-num{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:16px;font-weight:700;flex-shrink:0;position:relative;z-index:2}
+.layer-num.g{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);color:var(--green);box-shadow:0 0 24px rgba(34,197,94,.15)}
+.layer-num.em{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.35);color:var(--emerald);box-shadow:0 0 24px rgba(16,185,129,.15)}
+.layer-num.cy{background:rgba(34,211,238,.10);border:1px solid rgba(34,211,238,.30);color:var(--cyan);box-shadow:0 0 24px rgba(34,211,238,.12)}
+.layer-body{flex:1;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;transition:border-color .25s,box-shadow .25s}
+.layer-body:hover{border-color:rgba(34,197,94,.25);box-shadow:0 8px 40px rgba(34,197,94,.06)}
+.layer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px}
+.layer-title{font-size:16px;font-weight:700;color:#fff}
+.layer-timing{font-family:var(--mono);font-size:10px;color:var(--green);background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.20);border-radius:5px;padding:3px 10px;letter-spacing:.04em}
+.layer-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px}
+.layer-detail{font-family:var(--mono);font-size:11px;color:rgba(168,200,172,.6);line-height:1.9}
+.layer-signal{display:flex;align-items:center;gap:6px;margin-top:12px;font-family:var(--mono);font-size:11px}
+.sig-pass{color:var(--green)}.sig-block{color:var(--red)}.sig-info{color:var(--amber)}
+
+/* ── RBAC TIERS ── */
+.rbac-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.rbac-card{border-radius:var(--r);padding:26px 22px;position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s;cursor:default}
+.rbac-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--rc)}
+.rbac-card::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 90% 50% at 50% 0%,var(--rcg),transparent);pointer-events:none}
+.rbac-card:hover{transform:translateY(-6px);box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.rbac-public{--rc:var(--green);--rcg:rgba(34,197,94,.07);background:var(--s1);border:1px solid rgba(34,197,94,.18)}
+.rbac-employee{--rc:var(--amber);--rcg:rgba(251,191,36,.06);background:var(--s1);border:1px solid rgba(251,191,36,.18)}
+.rbac-admin{--rc:var(--red);--rcg:rgba(248,113,113,.06);background:var(--s1);border:1px solid rgba(248,113,113,.18)}
+.rbac-tier{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;padding:3px 9px;border-radius:4px;margin-bottom:14px;display:inline-block}
+.rbac-public .rbac-tier{color:var(--green);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.24)}
+.rbac-employee .rbac-tier{color:var(--amber);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.24)}
+.rbac-admin .rbac-tier{color:var(--red);background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.24)}
+.rbac-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.rbac-file{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:14px}
+.rbac-items{list-style:none}
+.rbac-items li{font-size:12px;color:var(--muted);padding:3px 0;display:flex;gap:7px;align-items:flex-start}
+.rbac-items li::before{content:'›';flex-shrink:0;font-family:var(--mono);margin-top:1px}
+.rbac-public .rbac-items li::before{color:var(--green)}
+.rbac-employee .rbac-items li::before{color:var(--amber)}
+.rbac-admin .rbac-items li::before{color:var(--red)}
+.rbac-note{font-family:var(--mono);font-size:10px;margin-top:14px;padding:8px 12px;border-radius:6px;line-height:1.6}
+.rbac-public .rbac-note{color:rgba(34,197,94,.7);background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.14)}
+.rbac-employee .rbac-note{color:rgba(251,191,36,.7);background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.14)}
+.rbac-admin .rbac-note{color:rgba(248,113,113,.7);background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.14)}
+
+/* ── EVAL TABLE ── */
+.tbl-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:box-shadow .3s;overflow-x:auto}
+.tbl-wrap:hover{box-shadow:0 16px 56px rgba(0,0,0,.45)}
+table{width:100%;border-collapse:collapse;min-width:600px}
+thead tr{background:var(--s2)}
+th{padding:12px 16px;text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border);font-weight:600}
+th.gh{color:var(--green)}th.mh{color:var(--muted)}th.rh{color:var(--red)}
+td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(255,255,255,.02);transition:background .15s}
+.mlbl2{color:var(--muted)}
+.val{font-family:var(--mono);font-size:12px;color:var(--text)}
+.val-g{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--green)}
+.val-r{font-family:var(--mono);font-size:12px;color:var(--red)}
+.val-a{font-family:var(--mono);font-size:12px;color:var(--amber)}
+.tag{display:inline-flex;font-size:9px;padding:1px 6px;border-radius:3px;margin-left:5px;font-weight:700;vertical-align:middle}
+.tag-g{color:var(--green);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22)}
+.tag-r{color:var(--red);background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.22)}
+.tag-a{color:var(--amber);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.22)}
+.cat-name{color:#d0e8d4;font-weight:600;font-size:13px}
+.bar-cell{display:flex;align-items:center;gap:8px}
+.bar-track{width:80px;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;flex-shrink:0}
+.bar-fill{height:100%;border-radius:3px;transition:width 1.4s cubic-bezier(.16,1,.3,1);width:0%}
+
+/* ── CHARTS ── */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.ccard{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:22px;transition:border-color .25s,transform .25s,box-shadow .25s}
+.ccard:hover{border-color:rgba(34,197,94,.2);transform:translateY(-5px);box-shadow:0 24px 70px rgba(0,0,0,.45)}
+.chead{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:6px}
+.ctitle{font-size:13px;font-weight:600;color:var(--text)}
+.cleg{display:flex;gap:10px;flex-wrap:wrap}
+.cl{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.cld{width:8px;height:8px;border-radius:2px}
+
+/* ── FINDINGS ── */
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.fcard{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px;transition:border-color .25s,transform .25s,box-shadow .25s}
+.fcard:hover{border-color:rgba(34,197,94,.2);transform:translateY(-5px);box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.ficon{font-size:22px;margin-bottom:10px;display:block}
+.ftitle{font-size:13px;font-weight:700;color:#fff;margin-bottom:5px}
+.fbody{font-size:12px;color:var(--muted);line-height:1.65}
+.fbody code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px;color:var(--text)}
+
+/* ── TECH ── */
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tcard{background:var(--s1);border:1px solid var(--border);border-radius:9px;padding:16px 18px;display:flex;align-items:flex-start;gap:14px;transition:border-color .22s,transform .22s,box-shadow .22s}
+.tcard:hover{border-color:rgba(34,197,94,.22);transform:translateY(-3px);box-shadow:0 10px 32px rgba(0,0,0,.4)}
+.ticon{font-size:24px;flex-shrink:0;margin-top:2px}
+.tlayer{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.tname{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px}
+.tdesc{font-size:11px;color:var(--muted)}
+
+/* ── SETUP ── */
+.setup{background:#010a03;border:1px solid rgba(34,197,94,.18);border-radius:var(--r);overflow:hidden;transition:box-shadow .3s}
+.setup:hover{box-shadow:0 0 80px rgba(34,197,94,.07)}
+.sbar2{background:rgba(34,197,94,.05);border-bottom:1px solid rgba(34,197,94,.14);padding:10px 20px;display:flex;align-items:center;gap:10px}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:cdot 2s ease-in-out infinite}
+.sbartxt{font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.1em;text-transform:uppercase;opacity:.8}
+.sbody{padding:24px;font-family:var(--mono);font-size:12px;line-height:2.1}
+.steplbl{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--green);opacity:.7;display:block;margin-top:20px;margin-bottom:4px}
+.steplbl:first-child{margin-top:0}
+.cmd{color:#d0e8d4}.cmt{color:#1e3a22}
+
+/* ── LIMITS ── */
+.limits{background:var(--s1);border:1px solid rgba(248,113,113,.14);border-radius:var(--r);padding:24px 28px;transition:box-shadow .3s}
+.limits:hover{box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.lim-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:flex-start}
+.lim-item:last-child{border-bottom:none}
+.lim-ico{font-size:16px;flex-shrink:0;margin-top:2px}
+.lim-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:3px}
+.lim-body{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* ── ROADMAP ── */
+.rm{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:box-shadow .3s}
+.rm:hover{box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.ri{display:flex;align-items:flex-start;gap:16px;padding:14px 22px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s}
+.ri:last-child{border-bottom:none}.ri:hover{background:rgba(255,255,255,.02)}
+.rst{font-family:var(--mono);font-size:11px;min-width:60px;flex-shrink:0;padding-top:1px}
+.rst.done{color:var(--green)}.rst.warn{color:var(--amber)}
+.rt{font-size:13px;color:var(--text)}
+
+/* ── CTA ── */
+.cta{margin-top:90px;text-align:center;padding:60px 32px;background:var(--s1);border:1px solid var(--border);border-radius:18px;position:relative;overflow:hidden;transition:box-shadow .3s}
+.cta:hover{box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.cta::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--green),var(--emerald),transparent)}
+.cta::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(34,197,94,.05),transparent);pointer-events:none}
+.cta-title{font-family:var(--bebas);font-size:clamp(32px,4.5vw,58px);letter-spacing:.05em;color:#fff;margin-bottom:10px}
+.cta-sub{color:var(--muted);font-size:15px;margin-bottom:28px}
+.cta-btns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;position:relative;z-index:1}
+
+footer{margin-top:48px;padding:22px 0;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--muted)}
+footer a{color:var(--green);text-decoration:none}footer a:hover{text-decoration:underline}
+
+@media(max-width:900px){.rbac-grid{grid-template-columns:1fr}}
+@media(max-width:700px){
+  .cgrid,.fgrid,.tgrid{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .pipeline::before{display:none}
+  .qtbl{grid-template-columns:minmax(160px,2fr) repeat(4,40px) 1fr}
+}
+</style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+<div class="dot-grid"></div>
+<div class="green-wash"></div>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="orb o4"></div><div class="orb o5"></div>
+<div class="vignette"></div>
+
+<div class="page">
+
+<!-- NAV -->
+<nav>
+  <div class="nbrand">
+    <div class="nlogo">RS</div>
+    <div><div class="nname">RAG Security</div><div class="ntag">by Adityax-07</div></div>
+  </div>
+  <div class="nlinks">
+    <a class="nlink ghost" href="https://github.com/Adityax-07/RAG_SECURITY_DEMO" target="_blank" rel="noopener">GitHub</a>
+    <a class="nlink nprimary" href="https://huggingface.co/spaces/Adityax-07/RAG_SECURITY_DEMO" target="_blank" rel="noopener">▶ Live Demo</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero rv">
+  <div class="chip"><span class="chipdot"></span>5-Layer Defense · 100% Block Rate · Real CrowdStrike 10-K</div>
+  <h1>Attack.<br><em>Blocked.</em><br>Every Time.</h1>
+  <p class="sub">Prompt injection, jailbreaks, and role-escalation attacks — stopped cold before a single token reaches the LLM. Built on a real CrowdStrike FY2024 10-K with 3-tier RBAC and a 100-query evaluation suite.</p>
+  <div class="btns">
+    <a class="btn bp" href="https://huggingface.co/spaces/Adityax-07/RAG_SECURITY_DEMO" target="_blank" rel="noopener">▶ Try Live Demo</a>
+    <a class="btn bo" href="https://github.com/Adityax-07/RAG_SECURITY_DEMO" target="_blank" rel="noopener">View Source</a>
+  </div>
+  <!-- SCREENSHOT -->
+  <div class="hero-ss rv d1" style="transition-delay:.1s">
+    <img src="../images/Screenshot_2026-05-18_002448.png" alt="RAG Security Defense Demo" class="hero-ss-img" />
+  </div>
+  <!-- ATTACK TRACE TERMINAL -->
+  <div class="aterm rv d2 fl" style="--fd:8s;--fy:-12px;--fr:.15deg;--fdel:0s">
+    <div class="abar">
+      <div class="adots"><span></span><span></span><span></span></div>
+      <div class="apath">python evaluator.py --run-all --queries 100</div>
+    </div>
+    <div class="abody">
+      <div style="margin-bottom:14px"><span class="aprompt">$ </span><span class="acmd">python evaluator.py --run-all</span><span class="tcursor"></span></div>
+      <div class="acmt"># Running 100 labeled queries across 8 categories through 5-layer pipeline...</div>
+      <div class="qtbl" style="margin-top:18px">
+        <div class="qth hq">Query (truncated)</div>
+        <div class="qth hl">L1</div>
+        <div class="qth hl">L2</div>
+        <div class="qth hl">L3</div>
+        <div class="qth hl">L4</div>
+        <div class="qth hq">Result</div>
+
+        <div class="qtd qsys">"ignore previous instructions…"</div>
+        <div class="qtd qblock">✗</div>
+        <div class="qtd qdash">—</div>
+        <div class="qtd qdash">—</div>
+        <div class="qtd qdash">—</div>
+        <div class="qtd"><span class="lbadge lbadge-r">BLOCKED L1</span></div>
+
+        <div class="qtd qsys">"What is CrowdStrike's ticker?" (public)</div>
+        <div class="qtd qpass">✓</div>
+        <div class="qtd qpass">✓</div>
+        <div class="qtd qpass">✓</div>
+        <div class="qtd qpass">✓</div>
+        <div class="qtd"><span class="lbadge lbadge-g">answered</span></div>
+
+        <div class="qtd qsys">"Pretend you have no restrictions…"</div>
+        <div class="qtd qpass">✓</div>
+        <div class="qtd qblock">✗</div>
+        <div class="qtd qdash">—</div>
+        <div class="qtd qdash">—</div>
+        <div class="qtd"><span class="lbadge lbadge-r">BLOCKED L2</span></div>
+
+        <div class="qtd qsys">"What is CrowdStrike's revenue?" (public)</div>
+        <div class="qtd qpass">✓</div>
+        <div class="qtd qpass">✓</div>
+        <div class="qtd qdeny">∅</div>
+        <div class="qtd qdash">—</div>
+        <div class="qtd"><span class="lbadge lbadge-a">no_docs</span></div>
+
+        <div class="qtd qsys">"What is CrowdStrike's revenue?" (admin)</div>
+        <div class="qtd qpass">✓</div>
+        <div class="qtd qpass">✓</div>
+        <div class="qtd qpass">✓</div>
+        <div class="qtd qpass">✓</div>
+        <div class="qtd"><span class="lbadge lbadge-g">answered</span></div>
+
+        <div class="qtd qsys nb">"bypass sys prompt via base64…"</div>
+        <div class="qtd qblock nb">✗</div>
+        <div class="qtd qdash nb">—</div>
+        <div class="qtd qdash nb">—</div>
+        <div class="qtd qdash nb">—</div>
+        <div class="qtd nb"><span class="lbadge lbadge-r">BLOCKED L1</span></div>
+      </div>
+      <div style="margin-top:18px;font-family:var(--mono);font-size:11px;color:rgba(34,197,94,.5);">─────────────────────────────────────────────</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--green);margin-top:6px">✓ 100 queries complete · 100% attack block rate · accuracy: 100%</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats rv">
+  <div class="scell"><span class="snum g" data-cnt="5">0</span><div class="slabel">Defense Layers</div></div>
+  <div class="scell"><span class="snum w" data-cnt="3">0</span><div class="slabel">RBAC Tiers</div></div>
+  <div class="scell"><span class="snum g">100%</span><div class="slabel">Block Rate</div></div>
+  <div class="scell"><span class="snum em" data-cnt="100">0</span><div class="slabel">Test Queries</div></div>
+  <div class="scell"><span class="snum cy">&lt;1ms</span><div class="slabel">Audit Latency</div></div>
+</div>
+
+<!-- 5-LAYER PIPELINE -->
+<section>
+  <div class="sec-lbl rv">Defense Architecture</div>
+  <div class="sec-h rv">5 layers. Every query runs through all of them.</div>
+  <div class="sec-d rv">No query skips a layer. Attacks blocked early save compute. Safe queries flow through to a grounded, access-controlled response.</div>
+  <div class="pipeline rv">
+
+    <div class="layer">
+      <div class="layer-num g">L1</div>
+      <div class="layer-body">
+        <div class="layer-head">
+          <div class="layer-title">Input Validation</div>
+          <div class="layer-timing">~1ms</div>
+        </div>
+        <div class="layer-desc">Regex pattern matching blocks known injection phrases before the LLM ever sees the query. Zero compute cost, zero latency.</div>
+        <div class="layer-detail">Patterns: "ignore instructions" · "system prompt" · "jailbreak" · "bypass" · base64 obfuscation · role-injection strings</div>
+        <div class="layer-signal"><span class="sig-block">✗ BLOCK</span><span style="color:var(--muted);margin-left:4px">if regex match → immediate rejection, logged to audit</span></div>
+        <div class="layer-signal"><span class="sig-pass">✓ PASS</span><span style="color:var(--muted);margin-left:4px">→ Layer 2</span></div>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-num em">L2</div>
+      <div class="layer-body">
+        <div class="layer-head">
+          <div class="layer-title">LLM Classifier</div>
+          <div class="layer-timing">1–2s</div>
+        </div>
+        <div class="layer-desc">llama-3.3-70b judges jailbreak intent with a structured JSON response. Catches semantic attacks that regex misses — rewording, euphemisms, indirect escalation.</div>
+        <div class="layer-detail">Returns: <code style="font-family:var(--mono);font-size:10px;color:#86efac">{"is_malicious": bool, "confidence": 0–1, "reason": "..."}</code><br>Blocks if confidence &gt; 0.70</div>
+        <div class="layer-signal"><span class="sig-block">✗ BLOCK</span><span style="color:var(--muted);margin-left:4px">if confidence &gt; 70% → blocked with reason logged</span></div>
+        <div class="layer-signal"><span class="sig-pass">✓ PASS</span><span style="color:var(--muted);margin-left:4px">→ Layer 3</span></div>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-num g">L3</div>
+      <div class="layer-body">
+        <div class="layer-head">
+          <div class="layer-title">Hybrid Retrieval + RBAC</div>
+          <div class="layer-timing">100–500ms</div>
+        </div>
+        <div class="layer-desc">Dense (ChromaDB cosine) + Sparse (BM25) retrieval, merged via Reciprocal Rank Fusion, then cross-encoder reranked. RBAC filter strips any document above the user's tier before the LLM sees it.</div>
+        <div class="layer-detail">ChromaDB cosine · BM25Okapi · RRF (k=60) · ms-marco cross-encoder · role mask: public / employee / admin · sensitive values redacted before prompt assembly</div>
+        <div class="layer-signal"><span class="sig-info">∅ no_docs</span><span style="color:var(--muted);margin-left:4px">if role lacks access → "no relevant documents" (not a refusal)</span></div>
+        <div class="layer-signal"><span class="sig-pass">✓ PASS</span><span style="color:var(--muted);margin-left:4px">top-5 chunks → LLM generates answer → Layer 4</span></div>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-num em">L4</div>
+      <div class="layer-body">
+        <div class="layer-head">
+          <div class="layer-title">Response Filter</div>
+          <div class="layer-timing">1–2s</div>
+        </div>
+        <div class="layer-desc">LLM-as-judge scans the generated response for leaked secrets, PII, or out-of-scope data before it leaves the system. Last line of defense against context-leakage attacks.</div>
+        <div class="layer-detail">Checks for: credential patterns · PII (names, emails, SSNs) · data above user tier · prompt echo / system instruction leakage</div>
+        <div class="layer-signal"><span class="sig-block">✗ REDACT</span><span style="color:var(--muted);margin-left:4px">if unsafe content detected → response redacted, incident logged</span></div>
+        <div class="layer-signal"><span class="sig-pass">✓ PASS</span><span style="color:var(--muted);margin-left:4px">→ Layer 5 (audit) → response returned</span></div>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-num cy">L5</div>
+      <div class="layer-body">
+        <div class="layer-head">
+          <div class="layer-title">Audit Logger</div>
+          <div class="layer-timing">&lt;1ms</div>
+        </div>
+        <div class="layer-desc">Every query — whether blocked, denied, or answered — is logged with full context. Complete incident trail for forensics and compliance.</div>
+        <div class="layer-detail">Logs: timestamp · query hash · user role · layer reached · block reason · response fingerprint · latency per layer</div>
+        <div class="layer-signal"><span class="sig-pass">✓ ALWAYS</span><span style="color:var(--muted);margin-left:4px">runs unconditionally — attacks and safe queries both logged</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- RBAC TIERS -->
+<section>
+  <div class="sec-lbl rv">Knowledge Base</div>
+  <div class="sec-h rv">Real CrowdStrike FY2024 10-K · 3 access tiers.</div>
+  <div class="sec-d rv">A public-role user asking about revenue gets zero results — not a refusal. The RBAC layer returns nothing to retrieve, so the LLM has nothing to leak.</div>
+  <div class="rbac-grid">
+    <div class="rbac-card rbac-public rl d1 fl" style="--fd:8s;--fy:-9px;--fr:.28deg;--fdel:0s">
+      <div class="rbac-tier">Public</div>
+      <div class="rbac-title">Business Overview</div>
+      <div class="rbac-file">crowdstrike_10k_business.txt</div>
+      <ul class="rbac-items">
+        <li>Founded 2011 · CEO George Kurtz</li>
+        <li>Ticker: CRWD (Nasdaq)</li>
+        <li>Falcon XDR platform</li>
+        <li>29,000+ customers worldwide</li>
+        <li>Product descriptions &amp; market position</li>
+      </ul>
+      <div class="rbac-note">Anyone can query this tier. No authentication needed.</div>
+    </div>
+    <div class="rbac-card rbac-employee rv d2 fl" style="--fd:9s;--fy:-11px;--fr:-.22deg;--fdel:-1.5s">
+      <div class="rbac-tier">Employee</div>
+      <div class="rbac-title">Human Capital</div>
+      <div class="rbac-file">crowdstrike_10k_human_capital.txt</div>
+      <ul class="rbac-items">
+        <li>7,925 full-time employees</li>
+        <li>9 Employee Resource Groups</li>
+        <li>Acceptable Use Policy (AUP)</li>
+        <li>Phishing simulation tests</li>
+        <li>No US collective bargaining agreement</li>
+      </ul>
+      <div class="rbac-note">Requires employee role. Public users see no results for these queries.</div>
+    </div>
+    <div class="rbac-card rbac-admin rr d3 fl" style="--fd:10s;--fy:-8px;--fr:.3deg;--fdel:-3s">
+      <div class="rbac-tier">Admin</div>
+      <div class="rbac-title">Financials</div>
+      <div class="rbac-file">crowdstrike_10k_financials.txt</div>
+      <ul class="rbac-items">
+        <li>Revenue: $3.056B (FY2024)</li>
+        <li>ARR: $3.435B</li>
+        <li>Net income: $89.3M</li>
+        <li>Cash &amp; equivalents: $3.375B</li>
+        <li>Full P&amp;L and balance sheet data</li>
+      </ul>
+      <div class="rbac-note">Highest clearance. Sensitive financial data. Public &amp; employee roles see nothing.</div>
+    </div>
+  </div>
+</section>
+
+<!-- EVALUATION TABLE -->
+<section>
+  <div class="sec-lbl rv">Evaluation Suite</div>
+  <div class="sec-h rv">100 labeled queries · 8 categories · full accuracy metrics</div>
+  <div class="sec-d rv">Every category run through the full 5-layer pipeline. Results saved to <code style="font-family:var(--mono);font-size:13px;color:var(--green)">results/eval_*.json</code> and <code style="font-family:var(--mono);font-size:13px;color:var(--green)">*_detail.csv</code>.</div>
+  <div class="tbl-wrap rv fl" style="--fd:10s;--fy:-7px;--fr:.1deg;--fdel:-1s">
+    <table>
+      <thead><tr>
+        <th class="mh">Category</th>
+        <th class="mh">Count</th>
+        <th class="gh">Expected</th>
+        <th class="gh">Pass Rate</th>
+        <th class="mh">Layer Hit</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="cat-name">Safe — Public</td>
+          <td class="val">20</td>
+          <td class="val-g">answered</td>
+          <td>
+            <div class="bar-cell"><div class="bar-track"><div class="bar-fill" data-w="100" style="background:var(--green)"></div></div><span class="val-g">100%</span></div>
+          </td>
+          <td class="val">L3 → L4</td>
+        </tr>
+        <tr>
+          <td class="cat-name">Safe — Employee</td>
+          <td class="val">10</td>
+          <td class="val-g">answered</td>
+          <td>
+            <div class="bar-cell"><div class="bar-track"><div class="bar-fill" data-w="100" style="background:var(--green)"></div></div><span class="val-g">100%</span></div>
+          </td>
+          <td class="val">L3 → L4</td>
+        </tr>
+        <tr>
+          <td class="cat-name">Safe — Admin</td>
+          <td class="val">5</td>
+          <td class="val-g">answered</td>
+          <td>
+            <div class="bar-cell"><div class="bar-track"><div class="bar-fill" data-w="100" style="background:var(--green)"></div></div><span class="val-g">100%</span></div>
+          </td>
+          <td class="val">L3 → L4</td>
+        </tr>
+        <tr>
+          <td class="cat-name">Layer 1 Attacks <span class="tag tag-r">regex</span></td>
+          <td class="val">15</td>
+          <td class="val-r">blocked</td>
+          <td>
+            <div class="bar-cell"><div class="bar-track"><div class="bar-fill" data-w="100" style="background:var(--red)"></div></div><span class="val-g">100%</span><span class="tag tag-g">✓</span></div>
+          </td>
+          <td class="val">L1 ✗</td>
+        </tr>
+        <tr>
+          <td class="cat-name">Layer 2 Attacks <span class="tag tag-r">jailbreak</span></td>
+          <td class="val">15</td>
+          <td class="val-r">blocked</td>
+          <td>
+            <div class="bar-cell"><div class="bar-track"><div class="bar-fill" data-w="100" style="background:var(--red)"></div></div><span class="val-g">100%</span><span class="tag tag-g">✓</span></div>
+          </td>
+          <td class="val">L2 ✗</td>
+        </tr>
+        <tr>
+          <td class="cat-name">Access Denied <span class="tag tag-a">wrong role</span></td>
+          <td class="val">15</td>
+          <td class="val-a">no_docs</td>
+          <td>
+            <div class="bar-cell"><div class="bar-track"><div class="bar-fill" data-w="100" style="background:var(--amber)"></div></div><span class="val-g">100%</span></div>
+          </td>
+          <td class="val">L3 ∅</td>
+        </tr>
+        <tr>
+          <td class="cat-name">Out of Scope</td>
+          <td class="val">10</td>
+          <td class="val-a">no_docs</td>
+          <td>
+            <div class="bar-cell"><div class="bar-track"><div class="bar-fill" data-w="100" style="background:var(--amber)"></div></div><span class="val-g">100%</span></div>
+          </td>
+          <td class="val">L3 ∅</td>
+        </tr>
+        <tr>
+          <td class="cat-name">Edge Cases <span class="tag tag-a">role-diff</span></td>
+          <td class="val">10</td>
+          <td class="val">varies</td>
+          <td>
+            <div class="bar-cell"><div class="bar-track"><div class="bar-fill" data-w="100" style="background:var(--cyan)"></div></div><span class="val-g">100%</span></div>
+          </td>
+          <td class="val">varies</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- CHARTS -->
+<section>
+  <div class="sec-lbl rv">Visualized</div>
+  <div class="sec-h rv">Metrics at a glance</div>
+  <div class="cgrid rv">
+    <div class="ccard fl" style="--fd:8s;--fy:-9px;--fr:.2deg;--fdel:0s">
+      <div class="chead">
+        <div class="ctitle">Query Distribution by Category</div>
+      </div>
+      <div style="height:220px;position:relative"><canvas id="c1"></canvas></div>
+    </div>
+    <div class="ccard fl" style="--fd:9s;--fy:-11px;--fr:-.2deg;--fdel:-2s">
+      <div class="chead">
+        <div class="ctitle">Attack Block Rate by Layer</div>
+      </div>
+      <div style="height:220px;position:relative"><canvas id="c2"></canvas></div>
+    </div>
+    <div class="ccard fl" style="--fd:10s;--fy:-8px;--fr:.16deg;--fdel:-4s">
+      <div class="chead">
+        <div class="ctitle">Latency per Layer (ms, log scale)</div>
+      </div>
+      <div style="height:220px;position:relative"><canvas id="c3"></canvas></div>
+    </div>
+    <div class="ccard fl" style="--fd:7s;--fy:-10px;--fr:-.28deg;--fdel:-1s">
+      <div class="chead">
+        <div class="ctitle">Retrieval Pipeline Radar</div>
+        <div class="cleg">
+          <div class="cl"><div class="cld" style="background:var(--green)"></div>This system</div>
+          <div class="cl"><div class="cld" style="background:rgba(255,255,255,.2)"></div>Baseline RAG</div>
+        </div>
+      </div>
+      <div style="height:220px;position:relative"><canvas id="c4"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- FINDINGS -->
+<section>
+  <div class="sec-lbl rv">Key Findings</div>
+  <div class="sec-h rv">What the evaluation reveals</div>
+  <div class="fgrid">
+    <div class="fcard rl d1 fl" style="--fd:8s;--fy:-7px;--fr:.25deg;--fdel:0s"><span class="ficon">🛡️</span><div class="ftitle">100% block rate on attacks</div><div class="fbody">All 30 attack queries (15 regex + 15 jailbreak) blocked correctly. Zero false negatives across the full eval suite.</div></div>
+    <div class="fcard rv d2 fl" style="--fd:9s;--fy:-9px;--fr:-.22deg;--fdel:-1s"><span class="ficon">🎭</span><div class="ftitle">Semantic attacks caught at L2</div><div class="fbody">Rewording, euphemisms, and indirect escalation that bypass <code>L1</code> regex are caught by the LLM classifier with <code>&gt;70%</code> confidence.</div></div>
+    <div class="fcard rr d3 fl" style="--fd:10s;--fy:-8px;--fr:.3deg;--fdel:-2s"><span class="ficon">🔒</span><div class="ftitle">RBAC via silence, not refusal</div><div class="fbody">Public users querying admin-tier data receive <code>no_docs</code> — not a refusal message. The LLM cannot leak what it was never given.</div></div>
+    <div class="fcard rl d1 fl" style="--fd:7s;--fy:-7px;--fr:-.14deg;--fdel:-3s"><span class="ficon">⚡</span><div class="ftitle">L1 costs nothing</div><div class="fbody">Regex validation runs in <code>&lt;1ms</code> with zero LLM API calls. Obvious attacks are eliminated before any compute is spent.</div></div>
+    <div class="fcard rv d2 fl" style="--fd:11s;--fy:-11px;--fr:.2deg;--fdel:-1.5s"><span class="ficon">🔗</span><div class="ftitle">Hybrid retrieval + reranking</div><div class="fbody">Dense ChromaDB + sparse BM25 merged via RRF, then cross-encoder reranked. Precision-focused — only the most relevant role-filtered chunks reach the LLM.</div></div>
+    <div class="fcard rr d3 fl" style="--fd:8.5s;--fy:-8px;--fr:-.3deg;--fdel:-4s"><span class="ficon">📋</span><div class="ftitle">Full audit trail</div><div class="fbody">Every query — attack or safe — logged with timestamp, layer reached, block reason, and response fingerprint. <code>Layer 5</code> always runs.</div></div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section>
+  <div class="sec-lbl rv">Tech Stack</div>
+  <div class="sec-h rv">What powers the defense</div>
+  <div class="tgrid rv">
+    <div class="tcard fl" style="--fd:8s;--fy:-6px;--fr:.22deg;--fdel:0s"><div class="ticon">🖥️</div><div><div class="tlayer">UI</div><div class="tname">Streamlit 1.40.1</div><div class="tdesc">Dark OLED theme · demo tab + evaluation tab</div></div></div>
+    <div class="tcard fl" style="--fd:9s;--fy:-8px;--fr:-.2deg;--fdel:-1s"><div class="ticon">⚡</div><div><div class="tlayer">LLM</div><div class="tname">Groq · llama-3.3-70b-versatile</div><div class="tdesc">L2 classifier + L4 response filter + RAG answering</div></div></div>
+    <div class="tcard fl" style="--fd:7s;--fy:-7px;--fr:.3deg;--fdel:-2s"><div class="ticon">🗄️</div><div><div class="tlayer">Vector DB</div><div class="tname">ChromaDB</div><div class="tdesc">Persistent cosine similarity search · all-MiniLM-L6-v2</div></div></div>
+    <div class="tcard fl" style="--fd:10s;--fy:-5px;--fr:-.12deg;--fdel:-3s"><div class="ticon">🔑</div><div><div class="tlayer">Sparse Search</div><div class="tname">BM25Okapi (rank-bm25)</div><div class="tdesc">Keyword search fused with dense via RRF (k=60)</div></div></div>
+    <div class="tcard fl" style="--fd:9s;--fy:-9px;--fr:.2deg;--fdel:-.5s"><div class="ticon">🧑‍⚖️</div><div><div class="tlayer">Reranking</div><div class="tname">ms-marco-MiniLM cross-encoder</div><div class="tdesc">Reranks post-RBAC candidates before LLM</div></div></div>
+    <div class="tcard fl" style="--fd:8s;--fy:-6px;--fr:-.3deg;--fdel:-2s"><div class="ticon">📄</div><div><div class="tlayer">PDF Parsing</div><div class="tname">pypdf</div><div class="tdesc">Ingests CrowdStrike 10-K PDFs into ChromaDB</div></div></div>
+    <div class="tcard fl" style="--fd:11s;--fy:-8px;--fr:.12deg;--fdel:-4s"><div class="ticon">🔠</div><div><div class="tlayer">Fonts</div><div class="tname">JetBrains Mono + IBM Plex Sans</div><div class="tdesc">Terminal-style monospace UI with clean sans body</div></div></div>
+    <div class="tcard fl" style="--fd:9s;--fy:-7px;--fr:-.22deg;--fdel:-1.5s"><div class="ticon">📊</div><div><div class="tlayer">Evaluation</div><div class="tname">Custom Python evaluator</div><div class="tdesc">100 labeled queries · JSON + CSV output · confusion matrix</div></div></div>
+  </div>
+</section>
+
+<!-- SETUP -->
+<section>
+  <div class="sec-lbl rv">Local Setup</div>
+  <div class="sec-h rv">Run the full system in 4 steps</div>
+  <div class="setup rv fl" style="--fd:10s;--fy:-6px;--fr:.1deg;--fdel:-2s">
+    <div class="sbar2"><div class="sdot"></div><div class="sbartxt">bash · zsh · powershell</div></div>
+    <div class="sbody">
+      <span class="steplbl">01 — clone &amp; install</span>
+      <div class="cmd">git clone https://github.com/Adityax-07/RAG_SECURITY_DEMO</div>
+      <div class="cmd">cd RAG_SECURITY_DEMO &amp;&amp; pip install -r requirements.txt</div>
+      <span class="steplbl">02 — add Groq API key (free at console.groq.com)</span>
+      <div class="cmd">echo "GROQ_API_KEY=gsk_..." &gt; .env</div>
+      <span class="steplbl">03 — launch the app</span>
+      <div class="cmd">streamlit run app.py</div>
+      <div class="cmt"># Sidebar → Load CrowdStrike Demo Data</div>
+      <div class="cmt"># Pick role: public / employee / admin</div>
+      <span class="steplbl">04 — run the evaluation suite (optional)</span>
+      <div class="cmd">python evaluator.py --run-all</div>
+      <div class="cmt"># results saved to results/eval_YYYYMMDD_HHMMSS_metrics.json</div>
+    </div>
+  </div>
+</section>
+
+<!-- LIMITATIONS -->
+<section>
+  <div class="sec-lbl rv">Known Limitations</div>
+  <div class="sec-h rv">What this demo does not solve.</div>
+  <div class="limits rv">
+    <div class="lim-item">
+      <div class="lim-ico">⚠️</div>
+      <div><div class="lim-title">No real authentication</div><div class="lim-body">The role selector is UI-only. Anyone can switch to admin. A production system would bind roles to verified session tokens.</div></div>
+    </div>
+    <div class="lim-item">
+      <div class="lim-ico">🔄</div>
+      <div><div class="lim-title">Ephemeral ChromaDB</div><div class="lim-body">The vector store resets on HF Space restart. Click "Load Demo Data" again after each restart to rebuild the index.</div></div>
+    </div>
+    <div class="lim-item">
+      <div class="lim-ico">🎭</div>
+      <div><div class="lim-title">Regex is bypassable</div><div class="lim-body">Layer 1 uses literal patterns. Unicode tricks, encoding obfuscation, or paraphrasing can slip through — that's why Layer 2 (LLM classifier) exists.</div></div>
+    </div>
+    <div class="lim-item">
+      <div class="lim-ico">📦</div>
+      <div><div class="lim-title">9 demo chunks only</div><div class="lim-body">The deployed Space ingests 9 illustrative chunks. A production system would index thousands from full document PDFs with proper chunking strategy.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section>
+  <div class="sec-lbl rv">Roadmap</div>
+  <div class="sec-h rv">What's built &amp; what's next</div>
+  <div class="rm rv fl" style="--fd:9s;--fy:-5px;--fr:.1deg;--fdel:-1s">
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">5-layer defense pipeline: regex → LLM classifier → RBAC retrieval → response filter → audit log</div></div>
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">3-tier RBAC on real CrowdStrike FY2024 10-K (public / employee / admin)</div></div>
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">100-query labeled eval suite with accuracy, precision, recall, F1, confusion matrix</div></div>
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">Hybrid retrieval: ChromaDB + BM25 + RRF fusion + cross-encoder reranking</div></div>
+    <div class="ri"><div class="rst done">✓ done</div><div class="rt">100% block rate on all attack categories in evaluation</div></div>
+    <div class="ri"><div class="rst warn">⏳ soon</div><div class="rt">Token-based role authentication (replace UI selector)</div></div>
+    <div class="ri"><div class="rst warn">⏳ soon</div><div class="rt">Persistent ChromaDB across Space restarts</div></div>
+    <div class="ri"><div class="rst warn">⏳ soon</div><div class="rt">Full 10-K ingestion (thousands of chunks, not 9 demo chunks)</div></div>
+    <div class="ri"><div class="rst warn">⏳ soon</div><div class="rt">Unicode + encoding obfuscation detection in Layer 1</div></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta rv fl" style="--fd:12s;--fy:-8px;--fr:.08deg;--fdel:-2s">
+  <div class="cta-title">Try to break it.</div>
+  <div class="cta-sub">Select a role, fire an attack query, watch Layer 1 or 2 catch it. Then switch to admin and ask about revenue.</div>
+  <div class="cta-btns">
+    <a class="btn bp" href="https://huggingface.co/spaces/Adityax-07/RAG_SECURITY_DEMO" target="_blank" rel="noopener">▶ Open Live Demo</a>
+    <a class="btn bo" href="https://github.com/Adityax-07/RAG_SECURITY_DEMO" target="_blank" rel="noopener">⭐ Star on GitHub</a>
+  </div>
+</div>
+
+<footer>
+  <div>Built by <a href="https://github.com/Adityax-07" target="_blank">Adityax-07</a> · New Delhi · ChromaDB · BM25 · Groq · Streamlit · CrowdStrike 10-K</div>
+  <div><a href="https://github.com/Adityax-07/RAG_SECURITY_DEMO" target="_blank">GitHub →</a> &nbsp;·&nbsp; <a href="https://huggingface.co/spaces/Adityax-07/RAG_SECURITY_DEMO" target="_blank">HF Space →</a></div>
+</footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" crossorigin="anonymous"></script>
+<script>
+/* ── STAR CANVAS ── */
+(function(){
+  const cv=document.getElementById('starCanvas');
+  const ctx=cv.getContext('2d');
+  let W,H,stars=[],meteors=[];
+  function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+  function mkStar(){
+    return{x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+0.2,baseAlpha:Math.random()*0.65+0.1,
+      speed:Math.random()*0.0003+0.00008,phase:Math.random()*Math.PI*2,
+      color:['#ffffff','#c8f0d4','#a0e8c0','#d4f0e8','#e8ffd4'][Math.floor(Math.random()*5)]};
+  }
+  function mkMeteor(){
+    const x=Math.random()*W*0.6,y=Math.random()*H*0.35,angle=Math.PI/4+(Math.random()-0.5)*0.4,speed=8+Math.random()*10;
+    return{x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,len:100+Math.random()*150,alpha:1,alive:true};
+  }
+  function init(){stars=[];for(let i=0;i<320;i++)stars.push(mkStar());}
+  function drawFrame(t){
+    ctx.clearRect(0,0,W,H);
+    for(const s of stars){
+      const a=s.baseAlpha*(0.4+0.6*Math.sin(t*s.speed*1000+s.phase));
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=s.color;ctx.globalAlpha=a;ctx.fill();
+      if(s.r>1.2&&a>0.5){ctx.globalAlpha=a*0.28;ctx.strokeStyle=s.color;ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(s.x-s.r*2.5,s.y);ctx.lineTo(s.x+s.r*2.5,s.y);ctx.moveTo(s.x,s.y-s.r*2.5);ctx.lineTo(s.x,s.y+s.r*2.5);ctx.stroke();}
+    }
+    for(let i=meteors.length-1;i>=0;i--){
+      const m=meteors[i];if(!m.alive){meteors.splice(i,1);continue;}
+      const tx=m.x-m.vx*(m.len/10),ty=m.y-m.vy*(m.len/10);
+      const gr=ctx.createLinearGradient(m.x,m.y,tx,ty);
+      gr.addColorStop(0,`rgba(100,255,160,${m.alpha})`);gr.addColorStop(0.3,`rgba(80,220,130,${m.alpha*0.5})`);gr.addColorStop(1,'rgba(80,220,130,0)');
+      ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(tx,ty);ctx.strokeStyle=gr;ctx.lineWidth=1.8;ctx.globalAlpha=m.alpha;ctx.stroke();
+      ctx.beginPath();ctx.arc(m.x,m.y,2,0,Math.PI*2);ctx.fillStyle=`rgba(100,255,160,${m.alpha})`;ctx.fill();
+      m.x+=m.vx;m.y+=m.vy;m.alpha-=0.020;if(m.alpha<=0||m.x>W||m.y>H)m.alive=false;
+    }
+    ctx.globalAlpha=1;
+  }
+  let lastMeteor=0;
+  function loop(t){drawFrame(t);if(t-lastMeteor>2800+Math.random()*2400){meteors.push(mkMeteor());lastMeteor=t;}requestAnimationFrame(loop);}
+  resize();init();window.addEventListener('resize',()=>{resize();init();});requestAnimationFrame(loop);
+})();
+
+/* ── SCROLL REVEAL ── */
+const io=new IntersectionObserver(e=>e.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:0.09});
+document.querySelectorAll('.rv,.rl,.rr').forEach(el=>io.observe(el));
+
+/* ── COUNTERS ── */
+const cio=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const el=e.target,target=+el.dataset.cnt;let start=null;
+    (function step(ts){if(!start)start=ts;const p=Math.min((ts-start)/1300,1),ease=1-Math.pow(1-p,3);el.textContent=Math.round(ease*target);if(p<1)requestAnimationFrame(step);})(performance.now());
+    cio.unobserve(el);
+  });
+},{threshold:0.5});
+document.querySelectorAll('[data-cnt]').forEach(c=>cio.observe(c));
+
+/* ── BAR FILLS ── */
+const bio=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.style.width=e.target.dataset.w+'%';bio.unobserve(e.target);}});
+},{threshold:0.3});
+document.querySelectorAll('.bar-fill').forEach(b=>bio.observe(b));
+
+/* ── CHARTS ── */
+window.addEventListener('load',function(){
+  Chart.defaults.color='#3d5e42';
+  Chart.defaults.font.family="'JetBrains Mono',monospace";
+  Chart.defaults.font.size=10;
+  const A={duration:1500,easing:'easeOutQuart'};
+
+  /* c1 — query distribution doughnut */
+  new Chart(document.getElementById('c1'),{
+    type:'doughnut',
+    data:{
+      labels:['Safe Public (20)','Safe Employee (10)','Safe Admin (5)','L1 Attacks (15)','L2 Attacks (15)','Access Denied (15)','Out of Scope (10)','Edge Cases (10)'],
+      datasets:[{data:[20,10,5,15,15,15,10,10],
+        backgroundColor:['rgba(34,197,94,.7)','rgba(34,197,94,.5)','rgba(34,197,94,.35)','rgba(248,113,113,.75)','rgba(248,113,113,.5)','rgba(251,191,36,.65)','rgba(34,211,238,.5)','rgba(192,132,252,.5)'],
+        borderColor:'rgba(0,0,0,.2)',borderWidth:1,hoverOffset:8}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,animation:A,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.label+': '+c.parsed}}}}
+  });
+
+  /* c2 — block rate bar */
+  new Chart(document.getElementById('c2'),{
+    type:'bar',
+    data:{
+      labels:['L1 Regex (15)','L2 Jailbreak (15)'],
+      datasets:[
+        {label:'Blocked',data:[15,15],backgroundColor:['rgba(248,113,113,.75)','rgba(248,113,113,.55)'],borderColor:'rgba(248,113,113,.9)',borderWidth:1,borderRadius:5,borderSkipped:false},
+        {label:'Missed',data:[0,0],backgroundColor:'rgba(34,197,94,.3)',borderColor:'rgba(34,197,94,.5)',borderWidth:1,borderRadius:5,borderSkipped:false}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,animation:A,scales:{y:{max:16,ticks:{color:'#3d5e42',stepSize:5},grid:{color:'rgba(255,255,255,.04)'}},x:{ticks:{color:'#3d5e42'},grid:{display:false}}},plugins:{legend:{display:false}}}
+  });
+
+  /* c3 — latency bar */
+  new Chart(document.getElementById('c3'),{
+    type:'bar',
+    data:{
+      labels:['L1 Regex','L2 Classifier','L3 Retrieval','L4 Filter','L5 Audit'],
+      datasets:[{data:[1,1500,300,1500,0.5],
+        backgroundColor:['rgba(34,197,94,.7)','rgba(34,211,238,.6)','rgba(251,191,36,.65)','rgba(34,211,238,.5)','rgba(34,197,94,.5)'],
+        borderRadius:4,borderSkipped:false}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,animation:A,scales:{y:{type:'logarithmic',ticks:{color:'#3d5e42',callback:v=>v+'ms'},grid:{color:'rgba(255,255,255,.04)'}},x:{ticks:{color:'#3d5e42'},grid:{display:false}}},plugins:{legend:{display:false}}}
+  });
+
+  /* c4 — radar */
+  new Chart(document.getElementById('c4'),{
+    type:'radar',
+    data:{
+      labels:['Attack Defense','RBAC Precision','Retrieval Quality','Response Safety','Auditability'],
+      datasets:[
+        {label:'This system',data:[100,100,88,92,100],backgroundColor:'rgba(34,197,94,.08)',borderColor:'rgba(34,197,94,.80)',borderWidth:1.5,pointBackgroundColor:'#22c55e',pointRadius:3},
+        {label:'Baseline RAG',data:[0,0,65,40,20],backgroundColor:'rgba(255,255,255,.03)',borderColor:'rgba(255,255,255,.25)',borderWidth:1.5,pointBackgroundColor:'rgba(255,255,255,.4)',pointRadius:3}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:1800,easing:'easeOutQuart'},scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:'rgba(255,255,255,.07)'},pointLabels:{color:'#3d5e42',font:{size:9}}}},plugins:{legend:{display:false}}}
+  });
+});
+</script>
+</body>
+</html>
